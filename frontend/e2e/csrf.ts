@@ -14,3 +14,10 @@ export async function apost(ctx: Ctx, url: string, opts: { data?: unknown; heade
   const token = await csrfOf(ctx, url);
   return ctx.request.post(url, { ...opts, headers: { ...(opts.headers ?? {}), ...(token ? { "X-CSRF-Token": token } : {}) } });
 }
+
+/** Spec 002: el valor por defecto de la app es el modo simple; las pruebas de la interfaz completa fijan «completo» como valor por defecto del navegador. */
+export async function newCtx(browser: import("@playwright/test").Browser, opts: Parameters<import("@playwright/test").Browser["newContext"]>[0] = {}) {
+  const ctx = await browser.newContext(opts);
+  await ctx.addInitScript(() => { try { localStorage.setItem("aicos.mode.default", "complete"); } catch { /* sin almacenamiento */ } });
+  return ctx;
+}

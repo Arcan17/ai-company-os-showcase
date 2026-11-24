@@ -64,7 +64,7 @@ M = [
     ("P23", "el inicio del flujo acepta campos de identidad del navegador", API, "            model_config = ConfigDict(extra=\"forbid\")        # el navegador no aporta", "            model_config = ConfigDict(extra=\"ignore\")        # el navegador no aporta", [FLOW]),
     # ── autenticación reciente ──
     ("P24", "las operaciones sensibles dejan de exigir autenticación reciente", API, "        if enforce_reauth and perm in STEP_UP_PERMS and user.get(\"_write\") and not user.get(\"_auth_fresh\"):", "        if False:", [STEP]),
-    ("P25", "decidir aprobaciones deja de ser sensible", API, "STEP_UP_PERMS = {\"config.manage\", \"approvals.decide\"}", "STEP_UP_PERMS = {\"config.manage\"}", [STEP]),
+    ("P25", "decidir aprobaciones deja de ser sensible", API, "STEP_UP_PERMS = {\"config.manage\", \"approvals.decide\", \"customers.anonymize\"}", "STEP_UP_PERMS = {\"config.manage\", \"customers.anonymize\"}", [STEP]),
     ("P26", "un `auth_time` ausente cuenta como reciente", SEC, "    raw = s.get(\"auth_time\")\n    if not raw:\n        return False", "    raw = s.get(\"auth_time\")\n    if not raw:\n        return True", [STEP, INV]),
     ("P27", "la ventana es de una hora en lugar de 15 minutos", SEC, "(max_age_seconds if max_age_seconds is not None else settings.reauth_max_age_seconds)", "3600", [STEP]),
     ("P28", "un `auth_time` del futuro lejano cuenta como reciente", SEC, "    return -FUTURE_SKEW_SECONDS <= age <=", "    return age <=", [STEP]),

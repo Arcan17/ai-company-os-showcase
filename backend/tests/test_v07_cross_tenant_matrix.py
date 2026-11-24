@@ -290,6 +290,10 @@ ROUTES: dict[tuple, list[C]] = {
     ("POST", "/api/plans/{pid}/cancel"): [C("owner", ("plan",), lambda i: f"/api/plans/{i['plan']}/cancel", ("plan",), None, "POST")],
     ("POST", "/api/plans/{pid}/clarify"): [C("owner", ("clarify",), lambda i: f"/api/plans/{i['clarify_plan']}/clarify", ("clarify_plan", "admin_user"),
                                              lambda i: {"admin_user_id": i["admin_user"]}, "POST")],
+    ("GET", "/api/customers/{kid}/access-log"): [C("owner", ("pending",), lambda i: f"/api/customers/{i['customer']}/access-log", ("customer",))],
+    ("GET", "/api/customers/{kid}/export"): [C("owner", ("pending",), lambda i: f"/api/customers/{i['customer']}/export", ("customer",))],
+    ("POST", "/api/customers/{kid}/anonymize"): [C("owner", ("pending",), lambda i: f"/api/customers/{i['customer']}/anonymize", ("customer",),
+                                                   lambda i: {"confirm_name": "no coincide"}, "POST", ok=(400,))],       # el control propio llega al cliente y responde 400 (confirmación): distinto del 404 de un id ajeno/ausente; nada se anonimiza
     ("POST", "/api/tools/{name}/invoke"): [C("owner", ("pending",), lambda i: "/api/tools/requests.get/invoke", ("request",), lambda i: {"args": {"request_id": i["request"]}}, "POST")],
 }
 

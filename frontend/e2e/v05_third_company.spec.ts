@@ -1,7 +1,7 @@
 // V0.5 acceptance: a THIRD fictitious company created and configured ONLY through the UI (no source edits): owner, 2 administrators, 2 technicians,
 // assistants from templates, a plan delegated to chosen employees, evidence, verification — compared with SQLite and the visualizer.
 import { Browser, expect, Page, test } from "@playwright/test";
-import { apost } from "./csrf";
+import { apost, newCtx } from "./csrf";
 import { execFileSync } from "node:child_process";
 import { writeFileSync } from "node:fs";
 
@@ -18,7 +18,7 @@ function rec(id: string, desc: string, ok: boolean, detail = "") { results.push(
 const shot = (p: Page, n: string, full = false) => p.screenshot({ path: `${SHOTS}/${n}.png`, fullPage: full });
 
 async function loginUi(browser: Browser, email: string, hash = "#/dashboard") {
-  const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  const ctx = await newCtx(browser, { viewport: { width: 1440, height: 900 } });
   const page = await ctx.newPage();
   await page.goto("/");
   await page.getByTestId("email").fill(email); await page.getByTestId("password").fill(PW); await page.getByTestId("login-submit").click();
@@ -30,7 +30,7 @@ async function loginUi(browser: Browser, email: string, hash = "#/dashboard") {
 test("V0.5 — tercera empresa creada y configurada desde la UI, plan completo entre dueña, administración y técnico", async ({ browser }) => {
   test.setTimeout(240_000);
   // 1) create the company from the login screen
-  const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  const ctx = await newCtx(browser, { viewport: { width: 1440, height: 900 } });
   const owner = await ctx.newPage();
   await owner.goto("/");
   await owner.getByTestId("new-company-link").click();
@@ -155,7 +155,7 @@ test("V0.5 — tercera empresa creada y configurada desde la UI, plan completo e
   const bad = owner.url().split("/").pop()!;
   rec("V5-13", "Acción prohibida en la empresa nueva: plan BLOQUEADO, 0 pasos, 0 tareas", one(`select status s from plans where id='${bad}'`).s === "blocked" && one(`select count(*) n from plan_steps where plan_id='${bad}'`).n === 0);
   const clima = await loginUi(browser, "dueno@climasur.test", "#/dashboard").catch(async () => null);
-  const climaCtx = await browser.newContext(); const cp = await climaCtx.newPage();
+  const climaCtx = await newCtx(browser, ); const cp = await climaCtx.newPage();
   await apost(cp, "/api/auth/login", { data: { email: "dueno@climasur.test", password: "demo1234" } });
   const seen = await cp.request.get(`/api/plans/${PLAN}`); const cfg = await cp.request.get("/api/config/overview").then(r => r.json());
   rec("V5-14", "Clima Sur no ve el plan de Aire Austral (404) ni sus empleados; sus 3 empleados y 5 agentes siguen intactos", seen.status() === 404 && cfg.employees.length === 3 && cfg.employees.every((e: any) => !e.email.includes("aireaustral")) && one("select count(*) n from agents a join companies c on c.id=a.company_id where c.slug='clima-sur'").n === 5);
@@ -176,7 +176,7 @@ test("V0.5 — tercera empresa creada y configurada desde la UI, plan completo e
   rec("V6-01", "Una escritura con la cookie de sesión pero SIN token CSRF se rechaza (403 csrf); la UI, que sí lo envía, escribió todo lo anterior", naked.status() === 403 && String(nakedBody.detail).startsWith("csrf"), `${naked.status()} ${nakedBody.detail}`);
   const foreign = await owner.request.post(`/api/config/agents/${oldAgent.id}/enabled`, { data: { enabled: true }, headers: { Origin: "http://evil.example", "X-CSRF-Token": await (async () => (await (await owner.request.get("/api/auth/me")).json()).csrf_token)() } });
   rec("V6-02", "Con token correcto pero Origin de otro sitio también se rechaza (403)", foreign.status() === 403, String(foreign.status()));
-  const second = await browser.newContext(); const secondP = await second.newPage();
+  const second = await newCtx(browser, ); const secondP = await second.newPage();
   const relog = await secondP.request.post("/api/auth/login", { data: { email: "elena@aireaustral.test", password: PW } });
   owner.once("dialog", d => d.accept());
   await owner.getByTestId("logout-all").click();

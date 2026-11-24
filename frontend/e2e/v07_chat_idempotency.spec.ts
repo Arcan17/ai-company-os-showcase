@@ -5,7 +5,7 @@ import { expect, test } from "@playwright/test";
 test("Issue #20 — el chat público envía un id y un secreto de 128 bits y el reintento recupera la misma conversación", async ({ page }) => {
   const posts: any[] = [], answers: any[] = [];
   page.on("request", r => { if (r.method() === "POST" && r.url().includes("/api/public/clima-sur/chat")) posts.push(r.postDataJSON()); });
-  page.on("response", async r => { if (r.request().method() === "POST" && r.url().includes("/api/public/clima-sur/chat")) answers.push(await r.json()); });
+  page.on("response", async r => { if (r.request().method() === "POST" && r.url().includes("/api/public/clima-sur/chat")) { try { answers.push(await r.json()); } catch { /* la página se cerró antes de leer el cuerpo */ } } });
   await page.goto("/#/cliente/clima-sur");
   await page.getByTestId("send-chat").click();
   await expect(page.getByTestId("resend-chat")).toBeVisible();

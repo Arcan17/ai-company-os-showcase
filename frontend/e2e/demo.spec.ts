@@ -1,5 +1,5 @@
 import { Browser, expect, Page, test } from "@playwright/test";
-import { apost } from "./csrf";
+import { apost, newCtx } from "./csrf";
 
 const SHOTS = "../docs/screenshots";
 let n = 0;
@@ -160,7 +160,7 @@ test("agents page and responsive dashboard", async ({ page }) => {
 
 
 async function session(browser: Browser, email: string) {
-  const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  const ctx = await newCtx(browser, { viewport: { width: 1440, height: 900 } });
   const page = await ctx.newPage();
   await page.goto("/");
   await login(page, email);

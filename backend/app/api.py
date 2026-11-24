@@ -28,6 +28,7 @@ from .engine.planner import ConflictError, PlanEngine
 from .events import audit, fetch
 from .permissions import ROLE_PERMISSIONS
 from .csrf import CsrfMiddleware
+from .privacy import access_log, anonymize_customer, export_customer, log_view, scrub
 from .security import (DUMMY_HASH, auth_fresh, create_session, csrf_for, delete_session, email_key, hash_password, lookup_session, needs_rehash, purge_expired,
                        record_attempt, revoke_user_sessions, session_hash, set_auth_time, throttle_wait, touch_due, touch_session, verify_password)
 from .seed import DEMO_PASSWORD, reset_company_scenarios, seed, sync_agents
@@ -35,7 +36,7 @@ from .tools import Denied, Principal, ToolError, invoke
 from .tools.registry import REGISTRY, describe_tools
 
 COOKIE = "aicos_session"
-STEP_UP_PERMS = {"config.manage", "approvals.decide"}        # V0.7 P2: las ESCRITURAS con estos permisos exigen autenticación reciente (`auth_time` ≤ AICOS_REAUTH_MAX_AGE_SECONDS)
+STEP_UP_PERMS = {"config.manage", "approvals.decide", "customers.anonymize"}        # V0.7 P2: las ESCRITURAS con estos permisos exigen autenticación reciente (`auth_time` ≤ AICOS_REAUTH_MAX_AGE_SECONDS)
 IDP_OK, IDP_FAIL = "/#/dashboard", "/#/login?error=idp"      # destinos FIJOS del callback (nunca un parámetro del navegador: no hay redirección abierta)
 IDP_START_FAIL = "no se pudo iniciar el acceso"
 LOCAL_HOST = re.compile(r"(localhost|127\.0\.0\.1|\[::1\]|([a-z0-9-]+\.)+localhost|testserver)(:\d+)?")
@@ -466,6 +467,7 @@ def create_app(db_url: str | None = None, *, identity_provider=None) -> FastAPI:
             if not r:
                 raise HTTPException(404, "no encontrada")
             cu = one(c, "SELECT id,name,phone,email,address FROM customers WHERE id=:i AND company_id=:c", i=r["customer_id"], c=user["company_id"])
+
             hist = all_(c, "SELECT id,description,status,created_at FROM requests WHERE company_id=:c AND customer_id=:k AND id<>:r ORDER BY created_at DESC", c=user["company_id"], k=r["customer_id"], r=rid)
             quotes = all_(c, "SELECT kind,total,status,lines FROM quotes WHERE company_id=:c AND request_id=:r", c=user["company_id"], r=rid)
             visit = one(c, "SELECT id,status,slot_start,customer_confirmed,confirmed_at FROM visits WHERE company_id=:c AND request_id=:r", c=user["company_id"], r=rid)
@@ -476,13 +478,53 @@ def create_app(db_url: str | None = None, *, identity_provider=None) -> FastAPI:
             tasks = all_(c, "SELECT title,status,assignee_agent FROM tasks WHERE company_id=:c AND request_id=:r", c=user["company_id"], r=rid)
         for qd in quotes:
             qd["lines"] = jload(qd["lines"], [])
+        if cu:
+            with eng.begin() as c:
+                log_view(c, user["company_id"], user["id"], cu["id"])
         return {"request": r, "customer": cu, "history": hist, "quotes": quotes, "visit": visit, "work_order": wo, "messages": msgs, "runs": runs, "results": results, "tasks": tasks}
 
     @app.get("/api/customers")
     def customers(user=Depends(current_user)):
         need(user, "customers.read")
         with eng.connect() as c:
-            return {"customers": all_(c, "SELECT id,name,phone,email,address FROM customers WHERE company_id=:c ORDER BY name", c=user["company_id"])}
+            rows = all_(c, "SELECT id,name,phone,email,address FROM customers WHERE company_id=:c ORDER BY name", c=user["company_id"])
+        with eng.begin() as c:
+            for r_ in rows:
+                log_view(c, user["company_id"], user["id"], r_["id"])
+        return {"customers": rows}
+
+    @app.get("/api/customers/{kid}/access-log")
+    def customer_access_log(kid: str, user=Depends(current_user)):
+        need(user, "customers.access_log")
+        rows = access_log(eng, user["company_id"], kid)
+        if rows is None:
+            raise HTTPException(404, "no encontrado")
+        return {"accesses": rows}
+
+    @app.get("/api/customers/{kid}/export")
+    def customer_export(kid: str, user=Depends(current_user)):
+        need(user, "customers.export")
+        data = export_customer(eng, user["company_id"], kid)
+        if data is None:
+            raise HTTPException(404, "no encontrado")
+        with eng.begin() as c:
+            audit(c, user["company_id"], "user", user["id"], "customer.export", kid, "ok", "")
+        return data
+
+    class Anonymize(BaseModel):
+        confirm_name: str = Field(min_length=1, max_length=200)
+
+    @app.post("/api/customers/{kid}/anonymize")
+    def customer_anonymize(kid: str, body: Anonymize, user=Depends(current_user)):
+        need(user, "customers.anonymize")   # solo la dueña, con autenticación reciente
+        r = anonymize_customer(eng, user["company_id"], user, kid, body.confirm_name)
+        if r.get("error") == "not_found":
+            raise HTTPException(404, "no encontrado")
+        if r.get("error") == "confirm_mismatch":
+            raise HTTPException(400, "Para anonimizar escribe el nombre exacto del cliente.")
+        if r.get("error") == "active_work":
+            raise HTTPException(409, "Este cliente tiene trabajo activo. Ciérralo o cancélalo antes de anonimizar sus datos.")
+        return r
 
     @app.get("/api/tasks")
     def tasks(user=Depends(current_user)):
@@ -502,7 +544,7 @@ def create_app(db_url: str | None = None, *, identity_provider=None) -> FastAPI:
                                                  WHERE t.company_id=:c AND t.status='pendiente' AND t.assignee_user_id=:u""", c=user["company_id"], u=user["id"])}
         for t in out["tasks"]:
             t["blocked_reason"] = blocked_reason(raw.get(t["id"], {}))
-        return {"tasks": out["tasks"], "waiting": waiting}
+        return scrub(eng, user, {"tasks": out["tasks"], "waiting": waiting})
 
     @app.get("/api/work-orders")
     def work_orders(user=Depends(current_user)):
@@ -513,7 +555,7 @@ def create_app(db_url: str | None = None, *, identity_provider=None) -> FastAPI:
             if user["role"] == "technician":
                 sql += " AND w.technician_id=:u"
                 p["u"] = user["id"]
-            return {"work_orders": all_(c, sql, **p)}
+            return scrub(eng, user, {"work_orders": all_(c, sql, **p)})
 
     @app.get("/api/audit")
     def audit_log(user=Depends(current_user)):
@@ -573,17 +615,17 @@ def create_app(db_url: str | None = None, *, identity_provider=None) -> FastAPI:
             ress = all_(c, "SELECT kind,summary FROM results WHERE company_id=:c AND run_id=:r", c=cid, r=rid)
             mats = all_(c, "SELECT sku,qty,status,cost,reason FROM material_requests WHERE company_id=:c AND run_id=:r", c=cid, r=rid)
             drafts = all_(c, "SELECT m.status,m.body FROM messages m WHERE m.company_id=:c AND m.status IN ('preparado_no_enviado','requiere_aprobacion','cancelado') AND m.conversation_id IN (SELECT conversation_id FROM requests WHERE id=:q AND company_id=:c)", c=cid, q=r["request_id"])
-        return {"id": r["id"], "status": r["status"], "phase": r["phase"], "request_id": r["request_id"], "provider": r["provider"], "scenario": r["scenario"],
+        return scrub(eng, user, {"id": r["id"], "status": r["status"], "phase": r["phase"], "request_id": r["request_id"], "provider": r["provider"], "scenario": r["scenario"],
                 "alternatives": st.get("alternatives", []) if r["status"] == "blocked" else [], "approvals": ap, "created_at": r["created_at"],
-                "tasks": tasks_, "delegations": dels, "commitments": cms, "results": ress, "materials": mats, "drafts": drafts}
+                "tasks": tasks_, "delegations": dels, "commitments": cms, "results": ress, "materials": mats, "drafts": drafts})
 
     @app.get("/api/runs/{rid}/events")
     def run_events(rid: str, after: int = 0, user=Depends(current_user)):
         need(user, "events.read")
         _run(user, rid)
-        return {"events": fetch(eng, user["company_id"], rid, after)}
+        return scrub(eng, user, {"events": fetch(eng, user["company_id"], rid, after)})
 
-    def _sse(request: Request, cid: str, rid: str, after: int, allow: set | None = None):
+    def _sse(request: Request, cid: str, rid: str, after: int, allow: set | None = None, user: dict | None = None):
         last_hdr = request.headers.get("last-event-id")
         last = int(last_hdr) if last_hdr and last_hdr.isdigit() else after
 
@@ -599,6 +641,8 @@ def create_app(db_url: str | None = None, *, identity_provider=None) -> FastAPI:
                     last = e["seq"]
                     if allow is not None and e["type"] not in allow:
                         continue
+                    if user is not None:
+                        e = await run_in_threadpool(scrub, eng, user, e)
                     yield f"id: {e['seq']}\nevent: run-event\ndata: {json.dumps(e, ensure_ascii=False)}\n\n"
                 idle = 0 if evs else idle + 1
                 if idle % 20 == 19:
@@ -610,7 +654,7 @@ def create_app(db_url: str | None = None, *, identity_provider=None) -> FastAPI:
     async def run_stream(rid: str, request: Request, after: int = 0, user=Depends(current_user)):
         need(user, "events.read")
         _run(user, rid)
-        return _sse(request, user["company_id"], rid, after)
+        return _sse(request, user["company_id"], rid, after, None, user)
 
     class Resolve(BaseModel):
         action: str
@@ -1053,21 +1097,21 @@ def create_app(db_url: str | None = None, *, identity_provider=None) -> FastAPI:
                 t["evidence"] = None
             else:
                 t.pop("assignee_user_id", None)
-        return {**v, "plan_id": pid, "scenario": "E", "phase": None, "provider": v["source"] or "deterministic", "alternatives": [], "approvals": [], "commitments": [],
-                "materials": [], "drafts": [], "tasks": tasks_, "delegations": dels, "results": ress}
+        return scrub(eng, user, {**v, "plan_id": pid, "scenario": "E", "phase": None, "provider": v["source"] or "deterministic", "alternatives": [], "approvals": [], "commitments": [],
+                "materials": [], "drafts": [], "tasks": tasks_, "delegations": dels, "results": ress})
 
     @app.get("/api/plans/{pid}/events")
     def plan_events(pid: str, after: int = 0, user=Depends(current_user)):
         need(user, "events.read")
         _plan_for(user, pid)
         allow = _plan_allow(user)
-        return {"events": [e for e in fetch(eng, user["company_id"], pid, after) if allow is None or e["type"] in allow]}
+        return scrub(eng, user, {"events": [e for e in fetch(eng, user["company_id"], pid, after) if allow is None or e["type"] in allow]})
 
     @app.get("/api/plans/{pid}/stream")
     async def plan_stream(pid: str, request: Request, after: int = 0, user=Depends(current_user)):
         need(user, "events.read")
         _plan_for(user, pid)
-        return _sse(request, user["company_id"], pid, after, _plan_allow(user))
+        return _sse(request, user["company_id"], pid, after, _plan_allow(user), user)
 
     @app.post("/api/plans/{pid}/confirm")
     def confirm_plan(pid: str, user=Depends(current_user)):

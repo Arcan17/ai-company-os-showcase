@@ -13,7 +13,7 @@ export default defineConfig({
   workers: 1,
   fullyParallel: false,
   reporter: [["list"]],
-  use: { baseURL: `http://127.0.0.1:${PORT}`, screenshot: "off", trace: "off", launchOptions: { executablePath }, viewport: { width: 1440, height: 900 } },
+  use: { storageState: { cookies: [], origins: [{ origin: `http://127.0.0.1:${PORT}`, localStorage: [{ name: "aicos.mode.default", value: "complete" }] }] }, baseURL: `http://127.0.0.1:${PORT}`, screenshot: "off", trace: "off", launchOptions: { executablePath }, viewport: { width: 1440, height: 900 } },
   webServer: {
     command: `rm -f ../backend/data/e2e.db* && cd ../backend && AICOS_STATIC_DIR=${process.cwd()}/${process.env.AICOS_UI_DIR ?? "dist-v05"} AICOS_ALLOW_COMPANY_CREATION=1 AICOS_DB_URL=sqlite:///data/e2e.db AICOS_STEP_DELAY=0.12 .venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port ${PORT} --no-proxy-headers`,
     url: `http://127.0.0.1:${PORT}/api/auth/demo-accounts`, reuseExistingServer: false, timeout: 60_000,

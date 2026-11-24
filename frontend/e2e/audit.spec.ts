@@ -1,7 +1,7 @@
 // QA AUDIT of V0.4 — runs against an ISOLATED server (:8742) on a COPY of the real database (see qa/start_audit_server.sh).
 // Every check is recorded in docs/qa/audit-results.json (PASS/FAIL + evidence) and soft-asserted, so one failure never hides the others.
 import { Browser, expect, Page, test } from "@playwright/test";
-import { apost } from "./csrf";
+import { apost, newCtx } from "./csrf";
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 
@@ -22,7 +22,7 @@ function rec(id: string, area: string, desc: string, ok: boolean, detail = "") {
 const txt = async (l: import("@playwright/test").Locator) => (await l.count()) ? await l.first().textContent() : null;   // never waits for absent elements
 
 async function session(browser: Browser, email: string) {
-  const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  const ctx = await newCtx(browser, { viewport: { width: 1440, height: 900 } });
   const page = await ctx.newPage();
   await page.goto("/");
   const r = await apost(page, "/api/auth/login", { data: { email, password: "demo1234" } });
@@ -481,7 +481,7 @@ test("AUDIT-UX: dashboard, agentes, compromisos, tareas, solicitudes históricas
   rec("UX-12", "UX", "Técnico: las tareas que esperan al cliente se muestran BLOQUEADAS y sin botón «Completar»", nb > 0 && (await blockedCards.locator('[data-testid="complete-task"]').count()) === 0, `bloqueadas=${nb}`);
   await shot(tech, "22-ux-tech-assistant-after");
   // mobile: the new screens must not overflow horizontally
-  const mctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const mctx = await newCtx(browser, { viewport: { width: 390, height: 844 } });
   const mob = await mctx.newPage();
   await mob.goto("/"); await apost(mob, "/api/auth/login", { data: { email: "dueno@climasur.test", password: "demo1234" } });
   for (const [route, tid, shotName] of [[`/#/coordinator/${PLAN}`, "plan-card", "23-ux-mobile-coordinator"], ["/#/dashboard", "attention", "24-ux-mobile-dashboard"], [`/#/flows/${PLAN}`, "flow-canvas", "25-ux-mobile-flows"]] as const) {

@@ -2,10 +2,12 @@ import { useEffect, useState } from "react";
 import { api, Me, money } from "../api";
 import { Chip, Empty, fmtDate, PageHeader, StatusChip } from "../ui";
 import { usePoll } from "./Dashboard";
+import CustomerData from "./CustomerData";
 
-function Detail({ id, onClose }: { id: string; onClose: () => void }) {
+function Detail({ id, onClose, me }: { id: string; onClose: () => void; me: Me }) {
   const [d, setD] = useState<any>(null);
-  useEffect(() => { api(`/requests/${id}`).then(setD); }, [id]);
+  const load = () => api(`/requests/${id}`).then(setD);
+  useEffect(() => { load(); }, [id]);
   if (!d) return null;
   const r = d.request;
   return (
@@ -24,6 +26,7 @@ function Detail({ id, onClose }: { id: string; onClose: () => void }) {
         <div><div className="font-semibold mb-1">Historial del cliente</div>{d.history.length === 0 ? <Empty>Sin solicitudes previas</Empty> : d.history.map((h: any) => <div key={h.id} className="text-xs border-t first:border-0 border-slate-100 py-1.5">{h.description} <span className="text-slate-400">· {h.status}</span></div>)}</div>
         <div><div className="font-semibold mb-1">Tareas y resultados</div>{d.tasks.map((t: any, i: number) => <div key={i} className="text-xs py-1">☐ {t.title} <Chip>{t.status}</Chip></div>)}{d.results.map((x: any, i: number) => <div key={i} className="text-xs py-1 text-emerald-700">✔ {x.summary}</div>)}</div>
       </div>
+      <CustomerData me={me} customer={d.customer} onChanged={load} />
       <div className="mt-4"><div className="font-semibold text-sm mb-1">Mensajes</div>{d.messages.map((m: any, i: number) => (
         <div key={i} className="text-xs border-t first:border-0 border-slate-100 py-1.5"><b>{m.sender}</b> {m.status === "preparado_no_enviado" && <Chip tone="amber">preparado · no enviado (simulado)</Chip>}<div className="text-slate-600">{m.body}</div></div>))}</div>
       <div className="mt-3">{d.runs.map((u: any) => <a key={u.id} className="btn btn-ghost mr-2" href={`#/flows/${u.id}`}>Ver ejecución en el visualizador →</a>)}</div>
@@ -80,7 +83,7 @@ export default function Operations({ me, reqId }: { me: Me; reqId?: string }) {
             : (reqs?.work_orders ?? []).map((w: any) => <tr key={w.request_id} className="border-t border-slate-100"><td className="py-2 font-mono text-xs">{w.request_id}</td><td>{w.customer}</td><td>{w.description}</td><td><Chip>{w.status}</Chip></td></tr>)}
         </tbody></table></div>
       </div>
-      {sel && can && <Detail id={sel} onClose={() => setSel(null)} />}
+      {sel && can && <Detail id={sel} me={me} onClose={() => setSel(null)} />}
       {me.permissions.includes("customers.read") && (
         <div className="card p-4 mt-4"><div className="font-semibold mb-3">Clientes</div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">{(cust?.customers ?? []).map((c: any) => (

@@ -2,7 +2,7 @@
 // on a fresh fixture. Every delegation / task / result shown by the UI is compared with SQLite and with the persisted visualizer events.
 // Checks are recorded in docs/demo/demo-results.json; screenshots go to docs/demo/screenshots/.
 import { Browser, expect, Page, test } from "@playwright/test";
-import { apost } from "./csrf";
+import { apost, newCtx } from "./csrf";
 import { execFileSync, spawn } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 
@@ -32,7 +32,7 @@ let PLAN: string = st.PLAN ?? "";
 const keep = () => writeFileSync(STATE, JSON.stringify({ PLAN }));
 const external: string[] = [];   // any request leaving the demo hosts would be listed here
 async function ctxPage(browser: Browser, base: string, persona: string, next = "/dashboard") {
-  const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  const ctx = await newCtx(browser, { viewport: { width: 1440, height: 900 } });
   const page = await ctx.newPage();
   page.on("request", r => { const u = new URL(r.url()); if (!["dueno.localhost", "admin.localhost", "tecnico.localhost", "127.0.0.1", "localhost"].includes(u.hostname) && u.protocol.startsWith("http")) external.push(r.url()); });
   await page.goto(`${base}/demo-login/${persona}?next=${next}`);
@@ -52,7 +52,7 @@ test("DEMO 10 min — dueño, administración y técnico en 3 sesiones independi
   const uid = (role: string) => one(`select id from users where company_id='${co}' and role='${role}'`).id as string;
 
   // ---- 0:00 launcher + 3 independent sessions
-  const guide = await browser.newContext(); const gp = await guide.newPage();
+  const guide = await newCtx(browser, ); const gp = await guide.newPage();
   await gp.goto(`${OWNER}/demo`);
   await expect(gp.getByText("Abrir las tres sesiones")).toBeVisible();
   rec("S-00", "Entorno", "La guía /demo muestra BD, modo, commit y los 3 accesos con hosts distintos", (await gp.content()).includes("dueno.localhost") && (await gp.content()).includes("demo_comercial_e2e.sqlite3") && (await gp.content()).includes("determinista"));
@@ -186,7 +186,7 @@ test("DEMO — permisos y aislamiento: administración y técnico no tienen pode
   rec("P-01", "Permisos", "Administración no puede crear planes; el técnico no puede cancelarlos; nadie sin permiso decide aprobaciones (403)", cr.status() === 403 && cf.status() === 403 && ap.status() === 403, `${cr.status()},${cf.status()},${ap.status()}`);
   const wrong = await apost(admin, `${ADMIN}/api/tasks/${ptasks(PLAN)[1].id}/complete`, { data: { evidence: "Intento cerrar la tarea de otra persona" } });
   rec("P-02", "Permisos", "Administración no puede cerrar la tarea del técnico (400) y no cambia nada", wrong.status() === 400 && ptasks(PLAN).every(t => t.status === "hecha"));
-  const other = await browser.newContext(); const op = await other.newPage();
+  const other = await newCtx(browser, ); const op = await other.newPage();
   const lg = await apost(op, `${OWNER}/api/auth/login`, { data: { email: "dueno@motornorte.test", password: "demo1234" } });
   const seen = await op.request.get(`${OWNER}/api/plans/${PLAN}`);
   rec("P-03", "Aislamiento", "Motor Norte (otra empresa) no ve el plan de Clima Sur (404) y su listado está vacío", lg.ok() && seen.status() === 404 && (await op.request.get(`${OWNER}/api/plans`).then(r => r.json())).plans.length === 0);

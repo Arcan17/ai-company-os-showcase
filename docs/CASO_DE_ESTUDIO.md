@@ -22,7 +22,7 @@ Una prueba de navegador falló **una vez** en CI (el botón de confirmar no apar
 *Dónde verlo:* `backend/app/engine/orchestrator.py` (`park_for_approval`), `backend/tests/test_v07_p25_approval_race.py`.
 
 ### 3 · Las pruebas de mutación delatan pruebas que pasan por la razón equivocada
-Se rompe **una** propiedad de seguridad por vez en una copia (p. ej. «el correo del proveedor no tiene que coincidir») y las pruebas deben fallar. **113** mutaciones en tres tandas. Varias veces sobrevivió una: no por un defecto del producto sino por **dos defensas que protegían lo mismo y se enmascaraban** (la unicidad de la base de datos cubría la comprobación de la aplicación, o una comprobación de correo cubría a la de empresa). La lección práctica: **cada defensa necesita una prueba que anule a la otra**; y una mutación que sobrevive suele significar una prueba que pasa por una razón distinta de la que dice.
+Se rompe **una** propiedad de seguridad por vez en una copia (p. ej. «el correo del proveedor no tiene que coincidir») y las pruebas deben fallar. **134** mutaciones en cuatro tandas. Varias veces sobrevivió una: no por un defecto del producto sino por **dos defensas que protegían lo mismo y se enmascaraban** (la unicidad de la base de datos cubría la comprobación de la aplicación, o una comprobación de correo cubría a la de empresa). La lección práctica: **cada defensa necesita una prueba que anule a la otra**; y una mutación que sobrevive suele significar una prueba que pasa por una razón distinta de la que dice.
 *Dónde verlo:* `qa/mutations_v07_p25.py` (con su prueba `test_every_p25_mutation_still_applies…`, que avisa si el código cambia y una aguja deja de existir).
 
 ### 4 · Una idempotencia que era un canal de fuga
@@ -31,10 +31,10 @@ El chat público usaba el id del mensaje como clave de idempotencia: quien conoc
 ## Métricas (todas con su comando)
 | Métrica | Valor | Fuente |
 |---|---|---|
-| Pruebas automáticas | 752 | `pytest --collect-only -q` |
-| Mutaciones de seguridad | 113 (29 + 45 + 39) | `python qa/mutations_v07_p{1,2,25}.py --list \| wc -l` |
+| Pruebas automáticas | 770 | `pytest --collect-only -q` |
+| Mutaciones de seguridad | 134 (29 + 45 + 39 + 21) | `python qa/mutations_v07_p{1,2,25}.py qa/mutations_v08.py --list \| wc -l` |
 | Consultas sin justificar en la guarda de aislamiento | 0 | `python qa/audit_identity_tenancy.py --check` |
-| Pruebas de navegador real | 13 + 4 + 2 | `frontend/e2e*`, `npx playwright test` |
+| Pruebas de navegador real | 18 + 4 + 2 | `frontend/e2e*`, `npx playwright test` |
 | Hallazgos de la matriz de aislamiento corregidos | 1 | historia 1 |
 
 ## Qué no está resuelto (y se dice)

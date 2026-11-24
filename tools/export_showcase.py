@@ -21,7 +21,7 @@ INCLUDE = (
     "frontend/package.json", "frontend/package-lock.json", "frontend/tsconfig.json", "frontend/vite.config.ts", "frontend/index.html",
     "frontend/postcss.config.js", "frontend/tailwind.config.js", "frontend/playwright",    # todas las configuraciones de Playwright (las pruebas de seguridad del repositorio leen la de auditoría)
     "qa/", ".gitignore", "run_demo.sh", "run_demo_comercial.sh", "run_v05_lab.sh",    # los lanzadores los exigen las pruebas de seguridad del propio repositorio
-    "docs/ARCHITECTURE.md", "docs/ROADMAP_V1_PRODUCTO.md", "docs/v05/", "docs/v06/", "docs/v07/", "docs/screenshots/",
+    "docs/ARCHITECTURE.md", "docs/ROADMAP_V1_PRODUCTO.md", "docs/v05/", "docs/v06/", "docs/v07/", "docs/v08/", "docs/simple/", "docs/screenshots/",
     "docs/demo/REAL_VS_SIMULADO.md", "docs/demo/RUNBOOK_DEMO.md", "docs/demo/screenshots/",
 )
 EXCLUDE = ("docs/demo/DEMO_COMERCIAL_V04.md", "docs/v05/v05-results.json")     # documento de planificación con el flujo interno; resultados regenerables
@@ -36,7 +36,8 @@ REPLACE = [(re.compile(r"\bCodex\b"), "revisión automatizada"),
 
 
 def tracked(src: Path) -> list[str]:
-    return subprocess.run(["git", "-C", str(src), "ls-files"], capture_output=True, text=True, check=True).stdout.splitlines()
+    out = subprocess.run(["git", "-C", str(src), "ls-files", "-z"], capture_output=True, check=True).stdout   # -z: sin comillas ni escapes en nombres con acentos
+    return [p for p in out.decode("utf-8").split("\0") if p]
 
 
 def wanted(rel: str) -> bool:

@@ -11,7 +11,7 @@
 | 1:15–1:40 | Operaciones → detalle de la solicitud | Visita **«Propuesta · sin confirmar»**; mensaje «preparado, no enviado» | «La visita queda *propuesta*, no confirmada. El mensaje al cliente es un borrador: aquí WhatsApp y correo están simulados, y lo decimos.» |
 | 1:40–2:00 | Chat de cliente → botón «Simular: el cliente responde CONFIRMO» | La visita pasa a confirmada | «Solo cuando el cliente responde con su código la visita se confirma de verdad.» |
 | 2:00–2:20 | *Coordinador*: escribir «Compra repuestos y avisa por WhatsApp a los clientes» | Plan **Bloqueado**, sin pasos ni efectos | «Y lo prohibido se bloquea: comprar, pagar, escribir a clientes o saltarse reglas no está en el catálogo de herramientas.» |
-| 2:20–2:45 | Terminal (pytest y mutaciones) + `docs/CASO_DE_ESTUDIO.md` | `752 passed`; `39 / 39 detectadas` | «Lo que más cuido es poder demostrarlo: 752 pruebas automáticas, 113 mutaciones de seguridad, una matriz que prueba el aislamiento entre empresas y una carrera real del motor que reproduje 8 de 8 veces antes de corregirla.» |
+| 2:20–2:45 | Terminal (pytest y mutaciones) + `docs/CASO_DE_ESTUDIO.md` | `770 passed`; `39 / 39 detectadas` | «Lo que más cuido es poder demostrarlo: 770 pruebas automáticas, 134 mutaciones de seguridad, una matriz que prueba el aislamiento entre empresas y una carrera real del motor que reproduje 8 de 8 veces antes de corregirla.» |
 | 2:45–3:00 | Pantalla final | Qué es / qué no es + contacto | «Es un prototipo local, no un SaaS: sin proveedor de identidad real ni despliegue. Si tu negocio tiene un flujo con aprobaciones, hagamos un piloto a medida. Mi contacto está en el repositorio.» |
 
 ## Capturas de apoyo ya disponibles

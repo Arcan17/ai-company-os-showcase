@@ -12,6 +12,12 @@ import Config from "./pages/Config";
 import NewCompany from "./pages/NewCompany";
 import CustomerChat from "./pages/CustomerChat";
 import ReauthDialog from "./ReauthDialog";
+import { ModeSwitch, ViewModeProvider, useViewMode } from "./viewMode";
+import { ROLE_HOME, SIMPLE_MENU } from "./simple/copy";
+import OwnerHome from "./simple/OwnerHome";
+import SimpleRequests from "./simple/Requests";
+import SimpleTasks from "./simple/Tasks";
+import SimpleHelp from "./simple/Help";
 
 export function useHash() {
   const [h, setH] = useState(location.hash || "#/");
@@ -43,6 +49,19 @@ export default function App() {
   const base = "/" + (route.split("/")[1] || "dashboard");
   const logout = async () => { await api("/auth/logout", { method: "POST", body: {} }); setMe(null); location.hash = "#/"; };
   const logoutAll = async () => { if (confirm("Se cerrará tu sesión en TODOS los navegadores y dispositivos. ¿Continuar?")) { await api("/auth/logout-all", { method: "POST", body: {} }); setMe(null); location.hash = "#/"; } };
+  return <ViewModeProvider userId={me.id}><Shell me={me} base={base} route={route} logout={logout} logoutAll={logoutAll} /></ViewModeProvider>;
+}
+
+function Shell({ me, base, route, logout, logoutAll }: { me: Me; base: string; route: string; logout: () => void; logoutAll: () => void }) {
+  const { mode } = useViewMode();
+  const simple = mode === "simple";
+  const menu = simple ? (SIMPLE_MENU[me.role] ?? []).filter(n => !n.perm || me.permissions.includes(n.perm)) : null;
+  const onSimpleRoute = base === "/s";
+  // Al activar el modo simple desde una pantalla completa, llevar al inicio del rol; en completo, salir de /s.
+  useEffect(() => {
+    if (simple && !onSimpleRoute && ["/dashboard"].includes(base)) location.hash = "#" + ROLE_HOME[me.role];
+    if (!simple && onSimpleRoute) location.hash = "#/dashboard";
+  }, [simple, base]);
   return (
     <div className="h-full flex flex-col md:flex-row">
       <ReauthDialog />
@@ -58,17 +77,21 @@ export default function App() {
           </div>
         </div>
         <nav className="flex md:flex-col gap-1 px-2 md:px-3 py-2 overflow-x-auto flex-1">
-          {NAV.filter(n => !(n as any).perm || me.permissions.includes((n as any).perm)).map(n => (
+          {simple && menu!.map(n => (
+            <a key={n.to} href={"#" + n.to} data-testid={"snav-" + n.to.slice(3)} className="nav-item" aria-current={route === n.to ? "page" : undefined}>{n.label}</a>))}
+          {!simple && NAV.filter(n => !(n as any).perm || me.permissions.includes((n as any).perm)).map(n => (
             <a key={n.to} href={"#" + n.to} data-testid={"nav-" + n.to.slice(1)}
                className="nav-item" aria-current={base === n.to ? "page" : undefined}>
               <span className="w-4 text-center">{n.icon}</span>{n.label}
             </a>
           ))}
-          <a href={`#/cliente/${me.company.slug}`} className="nav-item" data-testid="nav-customer-chat">
+          {!simple && <a href={`#/cliente/${me.company.slug}`} className="nav-item" data-testid="nav-customer-chat">
             <span className="w-4 text-center">✉</span>Chat de cliente (prueba)
-          </a>
+          </a>}
+          <div className="md:hidden ml-auto self-center pl-2 shrink-0"><ModeSwitch compact /></div>
         </nav>
         <div className="hidden md:block p-3 border-t border-white/60">
+          <div className="mb-3"><ModeSwitch /></div>
           <div className="text-sm font-semibold truncate" data-testid="user-name">{me.name}</div>
           <div className="flex items-center gap-1.5 mt-0.5"><Chip tone="indigo">{ROLE_LABEL[me.role]}</Chip>{me.is_demo ? <Chip tone="amber" title="Cuenta ficticia de demostración">demo</Chip> : null}</div>
           <button onClick={logout} className="btn btn-ghost w-full mt-3" data-testid="logout">Cerrar sesión</button>
@@ -76,6 +99,12 @@ export default function App() {
         </div>
       </aside>
       <main key={base} className="page-in flex-1 min-w-0 overflow-y-auto p-4 md:p-7 scroll-thin">
+        {simple && base !== "/s" && <div className="mb-4 text-xs text-slate-500 flex items-center gap-2" data-testid="back-to-simple">Estás viendo una pantalla de detalle. <a className="underline" href={"#" + ROLE_HOME[me.role]}>Volver a la vista simple</a></div>}
+        {base === "/s" && route === "/s/home" && me.permissions.includes("approvals.decide") && <OwnerHome me={me} />}
+        {base === "/s" && route === "/s/home" && !me.permissions.includes("approvals.decide") && <SimpleTasks me={me} />}
+        {base === "/s" && route === "/s/requests" && <SimpleRequests me={me} />}
+        {base === "/s" && route === "/s/tasks" && <SimpleTasks me={me} />}
+        {base === "/s" && route === "/s/help" && <SimpleHelp me={me} />}
         {base === "/dashboard" && <Dashboard me={me} />}
         {base === "/agents" && <Agents me={me} />}
         {base === "/flows" && <Flows me={me} runId={route.split("/")[2]} />}
