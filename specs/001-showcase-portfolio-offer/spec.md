@@ -4,7 +4,7 @@
 **Fuente:** el repositorio privado `Arcan17/ai-company-os` (prototipo local multiempresa de equipos de agentes con aprobación humana; datos 100 % ficticios).
 
 ## 1. Problema y propósito
-AI Company OS tiene mucha ingeniería comprobable (77 commits; 752 pruebas; 111 mutaciones; auditorías de aislamiento entre empresas; E2E en navegador real; documentación v05–v07), pero **nadie puede verlo**: el repositorio es privado, el README describe la v0.5, no hay video ni caso de estudio, y no hay una oferta concreta. Hay que convertirlo en **(a)** una pieza de portafolio que un reclutador o cliente entienda en 3 minutos y **(b)** una oferta de servicio creíble, **sin prometer lo que el producto no es** (hoy no tiene proveedor de identidad, MFA ni correo reales).
+AI Company OS tiene mucha ingeniería comprobable (77 commits; 752 pruebas; 113 mutaciones; auditorías de aislamiento entre empresas; E2E en navegador real; documentación v05–v07), pero **nadie puede verlo**: el repositorio es privado, el README describe la v0.5, no hay video ni caso de estudio, y no hay una oferta concreta. Hay que convertirlo en **(a)** una pieza de portafolio que un reclutador o cliente entienda en 3 minutos y **(b)** una oferta de servicio creíble, **sin prometer lo que el producto no es** (hoy no tiene proveedor de identidad, MFA ni correo reales).
 
 ## 2. Historias de usuario
 - **US1 · Reclutador/ingeniero (P1).** Abro el repositorio público y en 3 minutos entiendo qué es, qué decisiones de ingeniería tomó y cómo lo probó, y puedo ejecutarlo en mi máquina con un solo comando.
