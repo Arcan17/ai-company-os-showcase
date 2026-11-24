@@ -24,7 +24,7 @@ export default function Config({ me }: { me: Me }) {
         right={<Chip tone="sky" title="No son agentes autónomos">Plantillas · roles lógicos</Chip>} />
       {err && <div className="card p-3 mb-3 border-rose-300 bg-rose-50 text-sm text-rose-800" role="alert" data-testid="cfg-error">{err}</div>}
       {msg && !err && <div className="card p-3 mb-3 border-emerald-200 bg-emerald-50 text-sm text-emerald-900" data-testid="cfg-msg">{msg}</div>}
-      <div className="grid xl:grid-cols-[1fr_340px] gap-4">
+      <div className="grid 2xl:grid-cols-[1fr_340px] gap-4">
         <div className="space-y-4 min-w-0">
           <div className="card p-4">
             <div className="font-semibold mb-1">Empresa</div>
@@ -32,13 +32,13 @@ export default function Config({ me }: { me: Me }) {
           </div>
           <div className="card p-4">
             <div className="font-semibold mb-2">Empleados ({d.employees.length})</div>
-            <div className="overflow-x-auto"><table className="w-full text-sm [&_td]:pr-3 [&_th]:pr-3" data-testid="cfg-employees"><thead className="text-left text-xs text-slate-400"><tr><th className="pb-2">Persona</th><th>Rol</th><th>Asistente personal</th><th>Tareas abiertas</th><th>Estado</th><th></th></tr></thead>
+            <div className="overflow-x-auto"><table className="w-full text-sm [&_td]:pr-3 [&_th]:pr-3 [&_[data-testid=emp-status]_.chip]:whitespace-normal [&_[data-testid=emp-status]_.chip]:rounded-xl" data-testid="cfg-employees"><thead className="text-left text-xs text-slate-400"><tr><th className="pb-2">Persona</th><th>Rol</th><th>Asistente personal</th><th>Tareas abiertas</th><th>Estado</th><th></th></tr></thead>
               <tbody>{d.employees.map((u: any) => (
                 <tr key={u.id} className="border-t border-slate-100 align-top" data-testid="emp-row" data-name={u.name}>
                   <td className="py-2"><div className="font-medium">{u.name}</div><div className="text-xs text-slate-400">{u.email}</div></td>
                   <td><Chip tone="indigo">{ROLE_LABEL[u.role]}</Chip></td>
                   <td>{u.assistants.length === 0 ? (u.role !== "owner" || true) && <span className="text-xs text-amber-700">Sin asistente{u.active && <> · <button className="underline font-semibold" data-testid="emp-assign" onClick={() => act(() => api("/config/assignments", { body: { user_id: u.id, template: u.role === "admin" ? "admin_assistant" : u.role === "technician" ? "tech_assistant" : "owner_assistant" } }), "Asistente asignado")}>asignar</button></>}</span>
-                    : u.assistants.map((a: any) => <div key={a.agent_id} className="flex items-center gap-1.5"><Chip tone={a.enabled ? "green" : "slate"}>{TPL_LABEL[a.template] ?? a.template}</Chip>
+                    : u.assistants.map((a: any) => <div key={a.agent_id} className="flex flex-wrap items-center gap-x-1.5"><Chip tone={a.enabled ? "green" : "slate"}>{TPL_LABEL[a.template] ?? a.template}</Chip>
                       {!a.compatible ? <span className="text-[11px] text-slate-400" data-testid="emp-assistant-obsolete" title="Es la plantilla de su rol anterior: no se puede activar">plantilla de su rol anterior</span> : <button className="text-xs underline text-slate-600" data-testid="emp-assistant-toggle" onClick={() => act(() => api(`/config/agents/${a.agent_id}/enabled`, { body: { enabled: !a.enabled } }), a.enabled ? "Asistente desactivado" : "Asistente activado")}>{a.enabled ? "desactivar" : "activar"}</button>}</div>)}</td>
                   <td>{u.open_tasks}</td>
                   <td><span data-testid="emp-status">{u.active ? (u.eligible || u.role === "owner" ? <Chip tone="green">Activo{u.role !== "owner" ? " · puede recibir trabajo" : ""}</Chip> : <Chip tone="amber" title="No puede recibir trabajo del coordinador hasta tener un asistente activo">Activo · sin asistente activo</Chip>) : <Chip tone="red">Desactivado</Chip>}</span></td>

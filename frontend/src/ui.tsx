@@ -25,7 +25,7 @@ export const MODE: Record<string, { label: string; tone: keyof typeof TONES; hin
 export const ModeChip = ({ m }: { m?: string | null }) => m && MODE[m] ? <Chip tone={MODE[m].tone} title={MODE[m].hint}>{MODE[m].label}</Chip> : null;
 
 export const PageHeader = ({ title, sub, right }: { title: string; sub?: string; right?: ReactNode }) => (
-  <div className="flex flex-wrap items-end justify-between gap-3 mb-5">
+  <div className="flex flex-wrap items-end justify-between gap-3 mb-6">
     <div><h1 className="h-title">{title}</h1>{sub && <p className="text-sm text-slate-500 mt-0.5">{sub}</p>}</div>{right}
   </div>
 );

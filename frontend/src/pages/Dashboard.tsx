@@ -10,8 +10,8 @@ export function usePoll<T>(path: string, ms = 3000): [T | null, () => void] {
 }
 
 const Kpi = ({ label, value, tone, id, sub }: { label: string; value: number | string; tone?: string; id: string; sub?: string }) => (
-  <div className="card p-4"><div className="text-xs font-semibold text-slate-500">{label}</div><div className={`text-3xl font-bold mt-1 ${tone ?? ""}`} data-testid={id}>{value}</div>
-    {sub && <div className="text-[11px] text-slate-400 mt-0.5" data-testid={id + "-sub"}>{sub}</div>}</div>
+  <div className="card p-5"><div className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">{label}</div><div className={`text-4xl font-semibold tracking-tight mt-2 ${tone ?? "text-slate-900"}`} data-testid={id}>{value}</div>
+    {sub && <div className="text-[11px] text-slate-400 mt-1.5 leading-snug" data-testid={id + "-sub"}>{sub}</div>}</div>
 );
 
 // «Qué hacer» for a commitment: who must act and how (the table used to show only a red «vencido»)
@@ -51,7 +51,7 @@ export default function Dashboard({ me }: { me: Me }) {
       <PageHeader title={`Estado de ${me.company.name}`} sub={me.company.industry}
         right={<Chip tone={d.provider_mode === "llm" ? "violet" : "sky"} title="Motor que toma las decisiones de clasificación">
           {d.provider_mode === "llm" ? `LLM local · ${d.provider}` : "Motor determinista de demostración (sin LLM)"}</Chip>} />
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <Kpi id="kpi-requests" label="Solicitudes" value={d.total_requests} sub={`${d.active_requests} activas · ${d.historic_requests} históricas (cerradas/fallidas)`} />
         <Kpi id="kpi-active" label="Ejecuciones activas" value={d.active_runs} tone="text-brand-600" />
         <Kpi id="kpi-approvals" label="Aprobaciones pendientes" value={d.pending_approvals.length} tone={d.pending_approvals.length ? "text-amber-600" : ""} />
