@@ -1,0 +1,76 @@
+{
+  "estado": "borrador: el autor debe revisar el texto de cada módulo antes de publicar",
+  "titulo": "AI Company OS",
+  "bajada": "Equipos de agentes de IA que trabajan a la vista: nada se ejecuta sin la aprobación de una persona, y todo queda registrado.",
+  "para_quien": "Negocios de servicios técnicos (climatización, mantención, instalaciones) cuyas aprobaciones y trazabilidad hoy viven en chats y planillas.",
+  "contacto": {
+    "linkedin": "https://www.linkedin.com/in/bastian-altamirano-3805b4309/",
+    "portafolio": "https://portfolio-seven-dusky-80.vercel.app"
+  },
+  "repo": "https://github.com/Arcan17/ai-company-os-showcase",
+  "modulos": [
+    {
+      "id": "aprobacion-humana",
+      "nombre": "Aprobación humana antes de actuar",
+      "resuelve": "Que ningún gasto ni mensaje salga sin que la persona responsable lo decida, y que quede registrado quién decidió qué.",
+      "alcance": ["Solicitud de aprobación con monto y resumen", "Decisión de la dueña (aprobar o rechazar) con autenticación reciente", "Ninguna herramienta de los agentes puede decidir por la persona", "Registro de la decisión en la auditoría"],
+      "no_incluye": ["Flujos de aprobación de varios niveles", "Firma electrónica ni valor legal de la aprobación"],
+      "evidencia": ["backend/tests/test_flow.py", "backend/tests/test_v07_p25_approval_race.py", "docs/v07/P25_VINCULO_DUENO_Y_LIMITES.md"],
+      "demo": "Paso 3 del recorrido guiado: «Decide tú»."
+    },
+    {
+      "id": "atencion-clientes",
+      "nombre": "Atención a clientes con confirmación real",
+      "resuelve": "Que una solicitud por chat llegue ordenada al equipo y que una visita solo cuente como confirmada cuando el cliente responde con su código.",
+      "alcance": ["Chat público del cliente con reintentos seguros (sin duplicar)", "Recepción identifica al cliente y clasifica la solicitud", "Visita «propuesta» distinta de «confirmada»", "Mensajes al cliente preparados y marcados como no enviados (simulados)"],
+      "no_incluye": ["WhatsApp, correo o teléfono reales (están simulados y se rotulan así)", "Agenda sincronizada con calendarios externos"],
+      "evidencia": ["backend/tests/test_v07_chat_idempotency.py", "backend/tests/test_flow.py", "docs/demo/REAL_VS_SIMULADO.md"],
+      "demo": "Pasos 2 y 4 del recorrido guiado."
+    },
+    {
+      "id": "presupuestos-stock",
+      "nombre": "Presupuestos, stock y órdenes de trabajo",
+      "resuelve": "Que el presupuesto se arme con precios y stock reales de la empresa y que cada trabajo tenga su orden y sus tareas.",
+      "alcance": ["Cálculo de presupuesto con servicios y repuestos del catálogo", "Revisión de stock y alternativas si falta un repuesto", "Órdenes de trabajo y tareas con responsables", "Tareas que solo se cierran con evidencia"],
+      "no_incluye": ["Facturación ni integración con un ERP", "Compra automática a proveedores"],
+      "evidencia": ["backend/tests/test_scenario_d.py", "backend/tests/test_plans.py", "docs/ROADMAP_V1_PRODUCTO.md"],
+      "demo": "Escenarios A–E de la demo local."
+    },
+    {
+      "id": "trazabilidad",
+      "nombre": "Trazabilidad y auditoría",
+      "resuelve": "Poder reconstruir qué hizo cada rol y cada herramienta, con qué datos y con qué resultado.",
+      "alcance": ["Visualizador de cada ejecución con eventos reales guardados", "Registro de auditoría de decisiones y accesos", "Distinción entre lógica real, reglas deterministas y acciones simuladas"],
+      "no_incluye": ["Almacenamiento inmutable certificado", "Alertas hacia herramientas de monitoreo externas"],
+      "evidencia": ["backend/tests/test_v07_audit_tool.py", "docs/ARCHITECTURE.md"],
+      "demo": "Paso 5 del recorrido guiado: modo Completo."
+    },
+    {
+      "id": "privacidad-datos",
+      "nombre": "Privacidad y control de datos de clientes",
+      "resuelve": "Que cada rol vea solo los datos de contacto que necesita y que la dueña pueda ver quién consultó los datos de un cliente, descargarlos y anonimizarlos.",
+      "alcance": ["Contacto oculto a los roles que no lo necesitan, también en eventos y flujos en vivo", "Registro de consultas de fichas de clientes", "Exportación y anonimización con confirmación, que conserva montos y fechas"],
+      "no_incluye": ["Evaluación de cumplimiento de la ley de datos personales (requiere asesoría legal)", "Cifrado en reposo ni políticas de retención"],
+      "evidencia": ["backend/tests/test_v08_customer_privacy.py", "backend/tests/test_v08_customer_data_control.py", "docs/v08/SEGURIDAD_DATOS_CLIENTES.md", "qa/mutations_v08.py"],
+      "demo": "Panel «Datos de este cliente» en el modo Completo."
+    },
+    {
+      "id": "vistas-por-rol",
+      "nombre": "Vistas por rol: simple y completa",
+      "resuelve": "Que una dueña sin conocimientos técnicos decida en segundos, y que quien necesite el detalle lo tenga a un clic.",
+      "alcance": ["Vista simple por rol: una decisión o tarea por pantalla, en lenguaje de negocio", "Interruptor Simple / Completo que recuerda la elección de cada persona", "Mismas reglas, mismos permisos y misma auditoría en ambas vistas"],
+      "no_incluye": ["Aplicación móvil nativa", "Personalización visual por empresa"],
+      "evidencia": ["frontend/e2e/simple_mode.spec.ts", "docs/simple/screenshots/01-dueña-inicio.png"],
+      "demo": "Toda la demo: arranca en modo simple."
+    },
+    {
+      "id": "aislamiento-empresas",
+      "nombre": "Aislamiento entre empresas",
+      "resuelve": "Que cada empresa vea únicamente sus propios datos, y poder demostrarlo.",
+      "alcance": ["Cada consulta filtra por la empresa de la sesión, con una guarda estática que lo comprueba", "Matriz de aislamiento generada del OpenAPI vivo y del registro de herramientas", "Pruebas con una empresa atacante contra una empresa víctima"],
+      "no_incluye": ["Aislamiento a nivel de infraestructura (una base por cliente)", "Certificaciones de seguridad"],
+      "evidencia": ["backend/tests/test_v07_cross_tenant_matrix.py", "qa/audit_identity_tenancy.py"],
+      "demo": "Demo pública: cada visitante tiene su propio espacio."
+    }
+  ]
+}

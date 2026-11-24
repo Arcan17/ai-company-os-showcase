@@ -3,7 +3,7 @@
 **Un equipo de agentes de IA que trabaja a la vista: permisos reales, aprobación humana en cada decisión que importa y trazabilidad completa.**
 Prototipo local multiempresa para negocios de servicios técnicos. **Datos 100 % ficticios.**
 
-> **In English (30 s):** a multi-tenant platform where each company has a team of AI *roles* (reception, coordinator, per-employee assistants) that collaborate through a closed tool registry with real permissions, human approvals, idempotent state machines and an audit trail. It is a **local prototype with fictitious data**: no real identity provider, MFA, e-mail/WhatsApp or deployment. The interesting part is the engineering evidence: 770 automated tests, 134 mutation checks, cross-tenant isolation matrices, a static tenancy audit and real-browser E2E.
+> **In English (30 s):** a multi-tenant platform where each company has a team of AI *roles* (reception, coordinator, per-employee assistants) that collaborate through a closed tool registry with real permissions, human approvals, idempotent state machines and an audit trail. It is a **local prototype with fictitious data**: no real identity provider, MFA, e-mail/WhatsApp or deployment. The interesting part is the engineering evidence: 798 automated tests, 146 mutation checks, cross-tenant isolation matrices, a static tenancy audit and real-browser E2E.
 
 ## Lo que NO es (léelo primero)
 - **No es un SaaS en producción.** Corre en tu máquina (`127.0.0.1`); no hay despliegue, dominio, pagos ni usuarios reales.
@@ -36,6 +36,9 @@ flowchart LR
 ```
 
 ## Ejecutarlo (un comando)
+**Con contenedor (Podman o Docker):** `./start.sh` construye, levanta y espera a que responda en `http://127.0.0.1:8731` (`./start.sh stop` apaga; `./start.sh reset` borra los datos de la demo). La imagen corre sin privilegios, con el sistema de archivos de solo lectura y sin integraciones externas. `AICOS_PUBLIC_DEMO=1 ./start.sh` arranca la **demo pública**: un espacio aislado por visitante (ver [`docs/v09/DEMO_PUBLICA.md`](docs/v09/DEMO_PUBLICA.md)). Todo corre en el CI.
+
+**Sin contenedor:**
 Requisitos: [`uv`](https://docs.astral.sh/uv/), Node ≥ 20 (Python 3.12 lo instala `uv`).
 ```bash
 ./run_demo.sh                 # crea el entorno, compila el frontend y abre http://127.0.0.1:8731
@@ -57,11 +60,11 @@ Decisiones y *trade-offs*: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). Hoja 
 ## Cómo se probó (con el comando para reproducirlo)
 | Qué | Resultado | Cómo reproducirlo |
 |---|---|---|
-| Pruebas automáticas de API, motor, seguridad, persistencia y recuperación | **770** | `cd backend && .venv/bin/python -m pytest -q` |
-| **Matriz de aislamiento entre empresas** generada del OpenAPI vivo y del registro de herramientas (una ruta o herramienta con id sin caso hace fallar la prueba) | incluida en las 770 | `pytest backend/tests/test_v07_cross_tenant_matrix.py` |
-| **Pruebas de mutación**: se rompe UNA propiedad de seguridad cada vez en una copia y las pruebas deben notarlo | **134** (29 + 45 + 39 + 21) | `python qa/mutations_v07_p1.py` · `…_p2.py` · `…_p25.py` · `qa/mutations_v08.py` |
+| Pruebas automáticas de API, motor, seguridad, persistencia y recuperación | **798** | `cd backend && .venv/bin/python -m pytest -q` |
+| **Matriz de aislamiento entre empresas** generada del OpenAPI vivo y del registro de herramientas (una ruta o herramienta con id sin caso hace fallar la prueba) | incluida en las 798 | `pytest backend/tests/test_v07_cross_tenant_matrix.py` |
+| **Pruebas de mutación**: se rompe UNA propiedad de seguridad cada vez en una copia y las pruebas deben notarlo | **146** (29 + 45 + 39 + 21 + 12) | `python qa/mutations_v07_p1.py` · `…_p2.py` · `…_p25.py` · `qa/mutations_v08.py` |
 | Auditoría estática: toda consulta sobre una tabla de empresa filtra por `company_id` o está justificada una a una; toda ruta anónima está documentada | 0 sin justificar | `python qa/audit_identity_tenancy.py --check` |
-| Navegador real (Chromium): regresión A–E, demo guiada, modo piloto con cookie `__Host-` y reautenticación | 18 + 4 + 2 | `cd frontend && npx playwright test` (y `-c playwright.demo.config.ts`, `-c playwright.pilot.config.ts`) |
+| Navegador real (Chromium): regresión A–E, demo guiada, modo piloto con cookie `__Host-` y reautenticación | 18 + 4 + 2 + 2 | `cd frontend && npx playwright test` (y `-c playwright.demo.config.ts`, `-c playwright.pilot.config.ts`) |
 | Saneamiento de este repositorio (rutas, correos, claves, nombres internos) con su propia prueba de mutación | 0 hallazgos | `python tools/check_showcase.py` |
 
 Una anécdota que resume el enfoque: el CI falló una vez en una prueba de navegador. En vez de subir el *timeout*, se **reprodujo sin navegador** (8 de 8 ejecuciones atascadas), se halló una **carrera real del motor** («aprobación decidida antes de que la ejecución espere»), se corrigió con una transición atómica y se fijó con 15 pruebas deterministas (eventos y barreras, sin dormir).
@@ -78,13 +81,16 @@ Detalle: [`docs/demo/REAL_VS_SIMULADO.md`](docs/demo/REAL_VS_SIMULADO.md).
 ## Límites honestos
 Una sola máquina y SQLite; sin recuperación de contraseña ni TLS propios; probado con español y un caso de servicio técnico; un fallo de ejecución no se reintenta solo (decisión deliberada: reintentar sin reconciliar efectos podría duplicar trabajo). Pendientes explícitos del camino a un piloto (proveedor real, MFA verificado, hosting, región de datos, contratos): [`docs/v07/`](docs/v07/).
 
+## Sitio y catálogo de módulos
+[`site/`](site/) contiene el sitio de portafolio (una página sin dependencias externas) generado desde [`site/catalog.json`](site/catalog.json): siete módulos con su alcance, sus exclusiones y su evidencia. `python site/check_site.py` recalcula las cifras desde el repositorio y falla si la página no coincide; `python tools/check_figures.py` hace lo mismo con los textos de este repositorio.
+
 ## Mapa de documentos
 [`docs/v08/SEGURIDAD_DATOS_CLIENTES.md`](docs/v08/SEGURIDAD_DATOS_CLIENTES.md): contacto oculto al técnico/a, registro de consultas, exportar y anonimizar datos de un cliente (con la fuga real que se encontró y los límites).
 
 **Empieza por el [caso de estudio](docs/CASO_DE_ESTUDIO.md)** (cuatro historias de ingeniería con su evidencia) · [`docs/SEGURIDAD.md`](docs/SEGURIDAD.md) qué se probó y qué no · [`docs/ARQUITECTURA_V07.md`](docs/ARQUITECTURA_V07.md) diagramas · [`docs/oferta/PILOTO_A_MEDIDA.md`](docs/oferta/PILOTO_A_MEDIDA.md) la oferta · [`docs/VIDEO_GUION.md`](docs/VIDEO_GUION.md) · [`materiales/`](materiales/) textos para CV, LinkedIn y servicio · [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) · [`docs/v06/`](docs/v06/) acceso y sesiones, copias y restauración, límites del canal público, recuperación de ejecuciones · [`docs/v07/`](docs/v07/) auditoría de identidad y tenancy, modo piloto, identidad e invitaciones, vínculo del dueño · [`docs/demo/`](docs/demo/) guion y runbook · [`qa/`](qa/) herramientas de auditoría y mutación.
 
 ## Cifras y su fuente
-Las cifras de este README salen de estos comandos, ejecutados sobre un clon limpio de este repositorio: `pytest --collect-only -q` (770) · `python qa/mutations_v07_p{1,2,25}.py --list | wc -l` (29, 45, 39) y `qa/mutations_v08.py --list` (21) · listas de pruebas de `frontend/e2e*` (18 + 4 + 2).
+Las cifras de este README salen de estos comandos, ejecutados sobre un clon limpio de este repositorio: `pytest --collect-only -q` (798) · `python qa/mutations_v07_p{1,2,25}.py --list | wc -l` (29, 45, 39) y `qa/mutations_v08.py qa/mutations_v09.py --list` (21) · listas de pruebas de `frontend/e2e*` (18 + 4 + 2 + 2).
 
 ## Licencia y contacto
 **Código visible, todos los derechos reservados** (ver [`LICENSE`](LICENSE)): puedes leerlo, clonarlo y ejecutarlo localmente para **evaluar** mi trabajo; no puedes copiarlo, redistribuirlo ni usarlo en un producto o servicio sin autorización escrita. Los datos son ficticios y el software se entrega «tal cual».

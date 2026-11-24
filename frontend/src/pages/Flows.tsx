@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Background, Controls, Edge, Handle, MarkerType, Node, NodeProps, Position, ReactFlow } from "@xyflow/react";
+import { Background, Controls, Edge, Handle, MarkerType, Node, NodeProps, Position, ReactFlow, useNodesState } from "@xyflow/react";
 import { api, Ev, Me, money } from "../api";
 import { Chip, Empty, fmtTime, ModeChip, PageHeader, StatusChip } from "../ui";
 import { usePoll } from "./Dashboard";
@@ -184,9 +184,14 @@ export default function Flows({ me, runId }: { me: Me; runId?: string }) {
   const shown = useMemo(() => events.slice(0, idx), [events, idx]);
   const d = useMemo(() => derive(shown), [shown]);
 
-  const nodes: Node[] = useMemo(() => Object.entries(NODES).map(([id, m]) => ({
-    id, type: "agent", position: { x: m.x, y: m.y }, draggable: true, data: { st: d.status[id], meta: m, tool: d.lastTool[id], tools: d.tools[id] ?? 0, denied: d.denied[id] ?? 0, selected: sel === id },
-  })), [d, sel]);
+  // Los nodos viven en el ESTADO y se actualizan conservando lo que React Flow ya midió (`measured`) y la posición que arrastró la persona. Antes se creaban objetos nuevos en cada cambio
+  // y sin `onNodesChange`: los nodos volvían a quedar «sin medir» (React Flow los oculta, `visibility: hidden`) hasta que algo los volvía a medir, y a veces nunca ocurría (fallo intermitente en CI).
+  const build = useCallback((prev: Node[]): Node[] => Object.entries(NODES).map(([id, m]) => {
+    const old = prev.find(n => n.id === id);
+    return { ...(old ?? {}), id, type: "agent", position: old?.position ?? { x: m.x, y: m.y }, draggable: true, data: { st: d.status[id], meta: m, tool: d.lastTool[id], tools: d.tools[id] ?? 0, denied: d.denied[id] ?? 0, selected: sel === id } };
+  }), [d, sel]);
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node>(build([]));
+  useEffect(() => { setNodes(prev => build(prev)); }, [build, setNodes]);
   const edges: Edge[] = useMemo(() => EDGES.map(([a, b, ha, hb]) => {
     const e = d.edges[key(a, b)];
     const forward = !e || (e.from === a);
@@ -250,7 +255,7 @@ export default function Flows({ me, runId }: { me: Me; runId?: string }) {
                 {run.result_summary && <pre className="mt-2 text-[11px] whitespace-pre-wrap font-sans text-emerald-900 bg-emerald-50 border border-emerald-200 rounded p-2" data-testid="plan-panel-result">{run.result_summary}</pre>}
               </div>)}
             <div className="card overflow-hidden relative h-[540px]" data-testid="flow-canvas">
-              <ReactFlow nodes={nodes} edges={edges} nodeTypes={nodeTypes} fitView fitViewOptions={{ padding: 0.12 }} nodesConnectable={false} onNodeClick={(_, n) => setSel(n.id)} onPaneClick={() => setSel(null)} minZoom={0.3}>
+              <ReactFlow nodes={nodes} onNodesChange={onNodesChange} edges={edges} nodeTypes={nodeTypes} fitView fitViewOptions={{ padding: 0.12 }} nodesConnectable={false} onNodeClick={(_, n) => setSel(n.id)} onPaneClick={() => setSel(null)} minZoom={0.3}>
                 <Background gap={22} color="#e5e7eb" /><Controls showInteractive={false} />
               </ReactFlow>
               <div className="absolute left-3 bottom-3 flex flex-wrap gap-1.5 pointer-events-none">

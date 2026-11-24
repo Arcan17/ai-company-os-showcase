@@ -1,0 +1,29 @@
+# AI Company OS — demo con datos ficticios. Funciona igual con `podman compose` y `docker compose`.
+# Por defecto SOLO escucha en 127.0.0.1 (nadie más en tu red la ve). Para otra interfaz, cambia AICOS_BIND de forma consciente.
+services:
+  aicos:
+    build:
+      context: .
+      dockerfile: Containerfile
+    image: aicos-demo:local
+    ports:
+      - "${AICOS_BIND:-127.0.0.1}:${PORT:-8731}:8731"
+    volumes:
+      - aicos-data:/data
+    read_only: true               # la imagen no se puede modificar; solo /data (volumen) y /tmp
+    tmpfs:
+      - /tmp
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 512m
+    pids_limit: 256
+    restart: unless-stopped
+    environment:
+      AICOS_STEP_DELAY: "${AICOS_STEP_DELAY:-0.55}"   # ritmo para poder mirar el grafo; 0 en pruebas
+      # Demo PÚBLICA (un espacio aislado por visitante; ver docs/v09). Se activa con: AICOS_PUBLIC_DEMO=1 ./start.sh
+      AICOS_PUBLIC_DEMO: "${AICOS_PUBLIC_DEMO:-0}"
+      AICOS_PUBLIC_MAX_VISITORS: "${AICOS_PUBLIC_MAX_VISITORS:-20}"
+      AICOS_PUBLIC_IDLE_SECONDS: "${AICOS_PUBLIC_IDLE_SECONDS:-1800}"
+volumes:
+  aicos-data:

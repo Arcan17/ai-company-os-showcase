@@ -46,7 +46,9 @@ jobs:
       - name: Sanitization check (no absolute paths, real e-mails, internal tool names, keys or forbidden files) + its mutation tests
         run: |
           python tools/check_showcase.py
-          backend/.venv/bin/python -m pytest -q tests/test_check_showcase.py
+          backend/.venv/bin/python -m pytest -q tests/test_check_showcase.py tests/test_check_figures.py
+          python tools/check_figures.py
+          backend/.venv/bin/python site/check_site.py
 
       - name: Install restic (encrypted off-machine backup tool; used with a LOCAL temp repository only)
         run: |
@@ -82,7 +84,29 @@ jobs:
           AICOS_STATIC_DIR: ${{ github.workspace }}/frontend/dist-v05
         run: npx playwright test -c playwright.demo.config.ts
 
+      - name: "Run public-demo E2E (AICOS_PUBLIC_DEMO=1; dos visitantes simultáneos y recorrido guiado)"
+        working-directory: frontend
+        run: npx playwright test -c playwright.public.config.ts
+
       - name: Run pilot-mode E2E (AICOS_ENV=pilot, empty database, __Host- cookie in real Chromium)
         working-directory: frontend
         # Its own port and database (backend/data/e2e_pilot.db); the company is created by the operator CLI, never by the demo seed.
         run: npx playwright test -c playwright.pilot.config.ts
+
+  container-smoke:
+    name: Contenedor de un comando (prueba de humo)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      AICOS_ENGINE: docker      # el runner trae Podman y Docker: se fuerza Docker
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Construir, levantar y probar el contenedor (./start.sh + flujo corto)
+        run: qa/smoke_container.sh
+
+      - name: "Lo mismo en modo DEMO PÚBLICA (un espacio aislado por visitante)"
+        env:
+          AICOS_PUBLIC_DEMO: "1"
+        run: qa/smoke_container.sh
