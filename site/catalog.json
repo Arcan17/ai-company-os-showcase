@@ -1,7 +1,7 @@
 {
-  "estado": "borrador: el autor debe revisar el texto de cada módulo antes de publicar",
+  "estado": "revisado con el autor el 2026-11-24 (frase principal y autenticación reciente precisadas); falta su visto bueno final para publicar",
   "titulo": "AI Company OS",
-  "bajada": "Equipos de agentes de IA que trabajan a la vista: nada se ejecuta sin la aprobación de una persona, y todo queda registrado.",
+  "bajada": "Equipos de agentes de IA que trabajan a la vista: las decisiones importantes —gastos, planes y mensajes a clientes— las aprueba una persona, y todo queda registrado.",
   "para_quien": "Negocios de servicios técnicos (climatización, mantención, instalaciones) cuyas aprobaciones y trazabilidad hoy viven en chats y planillas.",
   "contacto": {
     "linkedin": "https://www.linkedin.com/in/bastian-altamirano-3805b4309/",
@@ -13,7 +13,7 @@
       "id": "aprobacion-humana",
       "nombre": "Aprobación humana antes de actuar",
       "resuelve": "Que ningún gasto ni mensaje salga sin que la persona responsable lo decida, y que quede registrado quién decidió qué.",
-      "alcance": ["Solicitud de aprobación con monto y resumen", "Decisión de la dueña (aprobar o rechazar) con autenticación reciente", "Ninguna herramienta de los agentes puede decidir por la persona", "Registro de la decisión en la auditoría"],
+      "alcance": ["Solicitud de aprobación con monto y resumen", "Decisión de la dueña (aprobar o rechazar); en modo piloto exige además autenticación reciente", "Ninguna herramienta de los agentes puede decidir por la persona", "Registro de la decisión en la auditoría"],
       "no_incluye": ["Flujos de aprobación de varios niveles", "Firma electrónica ni valor legal de la aprobación"],
       "evidencia": ["backend/tests/test_flow.py", "backend/tests/test_v07_p25_approval_race.py", "docs/v07/P25_VINCULO_DUENO_Y_LIMITES.md"],
       "demo": "Paso 3 del recorrido guiado: «Decide tú»."

@@ -6,7 +6,7 @@
 
 Llevo meses construyendo algo que no cabe en una demo de 30 segundos, así que decidí mostrar **cómo se prueba**, no solo cómo se ve.
 
-**AI Company OS** es un prototipo de equipos de agentes de IA para negocios de servicios técnicos: el cliente escribe, el coordinador arma el plan, administración cotiza, **y nada se ejecuta sin la aprobación de una persona**. Cada paso queda auditado y cada tarea solo se cierra con evidencia.
+**AI Company OS** es un prototipo de equipos de agentes de IA para negocios de servicios técnicos: el cliente escribe, el coordinador arma el plan, administración cotiza, **y las decisiones importantes —gastos, planes y mensajes a clientes— las aprueba una persona**. Cada paso queda auditado y cada tarea solo se cierra con evidencia.
 
 Lo que más me importó fue poder demostrarlo:
 • 798 pruebas automáticas y 146 mutaciones de seguridad (rompo una propiedad a propósito y las pruebas deben notarlo).
