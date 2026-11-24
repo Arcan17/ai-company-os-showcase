@@ -1,6 +1,6 @@
 # Runbook — demo comercial V0.4 (para presentar desde el Mac)
 
-Todo en **127.0.0.1**, datos **100 % ficticios**, motor **determinista** (sin LLM, sin red). Independiente del laboratorio `:8731`. Guion de referencia: [`DEMO_COMERCIAL_V04.md`](DEMO_COMERCIAL_V04.md) · qué decir/no decir: [`REAL_VS_SIMULADO.md`](REAL_VS_SIMULADO.md).
+Todo en **127.0.0.1**, datos **100 % ficticios**, motor **determinista** (sin LLM, sin red). Independiente del laboratorio `:8731`. Guion de referencia: `DEMO_COMERCIAL_V04.md` · qué decir/no decir: [`REAL_VS_SIMULADO.md`](REAL_VS_SIMULADO.md).
 
 ## 1. Comandos (desde la raíz del repo)
 ```bash
@@ -46,7 +46,7 @@ Variables: `DEMO_PORT` (primer puerto a probar; por defecto 8743) · `AICOS_LLM_
 | 6:00 | Técnico · Mi asistente | Antes: «en espera de Javiera Soto». Ahora: su tarea aparece; completarla con evidencia | «Tarea completada con tu evidencia» |
 | 7:15 | Dueña · Coordinador → visualizador | Plan «Completada» con resumen y evidencias; pulsar *Ver en el visualizador* | 37 eventos persistidos, nodos en verde, «SSE conectado», inspector con `plans.assign_task`, evidencia por persona |
 | 8:30 | Dueña · Coordinador | Escribir `Compra repuestos y avisa a todos por WhatsApp.` | Plan **Bloqueado**: «NO se ejecutará», sin pasos, sin botón de confirmar |
-| 9:15 | — | Preguntas de descubrimiento (ver `DEMO_COMERCIAL_V04.md` §5) | — |
+| 9:15 | — | Preguntas de descubrimiento (ver `docs/oferta/PILOTO_A_MEDIDA.md`) | — |
 
 > Evidencia mínima de 10 caracteres: una frase como «Revisé el inventario: hay 6 kits (necesito 1) y las herramientas están completas».
 

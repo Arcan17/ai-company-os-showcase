@@ -10,20 +10,20 @@ Orden de ejecución; cada bloque termina en algo verificable. `[P]` = se puede h
 
 ## Fase 2 — Que funcione desde cero
 - [x] T005 Arranque con un comando en un clon limpio (`run_demo.sh`), sin `backend/data` previo (SC-001, SC-004) — verificado en un clon limpio: `PORT=8790 ./run_demo.sh` → salud OK, página de entrada 200, cuentas ficticias servidas
-- [ ] T006 CI de la vitrina (`.github/workflows/ci.yml`): pytest + build + Playwright de regresión + comprobación de saneamiento (FR-008)
+- [x] T006 CI de la vitrina (`.github/workflows/ci.yml`): pytest + build + Playwright de regresión + comprobación de saneamiento (FR-008) — paso de saneamiento añadido; **falta ver el CI verde en GitHub (solo tras crear el repo)**
 - [x] T007 Ejecutar todo en local y anotar cifras reales (pruebas, E2E) como fuente de SC-003 — clon limpio: pytest **752**, Playwright **13 + 4 + 2**
 
 ## Fase 3 — Documentación que vende y que prueba
 - [x] T008 README v0.7 (qué es, qué NO existe, un comando, mapa) (FR-002, SC-005) — escrito; falta revisión tuya
-- [ ] T009 [P] `docs/ARQUITECTURA.md` con diagramas Mermaid (FR-003)
+- [x] T009 [P] `docs/ARQUITECTURA.md` con diagramas Mermaid (FR-003) — `docs/ARQUITECTURA_V07.md` (4 diagramas)
 - [x] T010 [P] `docs/CASO_DE_ESTUDIO.md` con las historias de ingeniería y métricas con fuente (FR-004, SC-003) — escrito; falta revisión tuya
-- [ ] T011 [P] `docs/SEGURIDAD.md`: qué se probó (matriz de aislamiento, mutaciones, guardas), cómo reproducirlo y qué NO se probó
-- [ ] T012 [P] Licencia y aviso legal (FR-009; depende de la aclaración 1)
+- [x] T011 [P] `docs/SEGURIDAD.md`: qué se probó (matriz de aislamiento, mutaciones, guardas), cómo reproducirlo y qué NO se probó — `docs/SEGURIDAD.md`
+- [x] T012 [P] Licencia y aviso legal (FR-009; depende de la aclaración 1) — `LICENSE` (código visible, todos los derechos reservados)
 
 ## Fase 4 — Oferta y materiales
-- [ ] T013 `docs/oferta/PILOTO_A_MEDIDA.md` (a quién, entregables, plazo, exclusiones, requisitos del cliente) (FR-005; depende de la aclaración 3)
-- [ ] T014 Guion del video de 2–3 min + lista de capturas/GIF (FR-006)
-- [ ] T015 `materiales/` con viñetas de CV, post de LinkedIn y descripción de servicio, cada cifra con su fuente (FR-010, SC-003)
+- [x] T013 `docs/oferta/PILOTO_A_MEDIDA.md` (a quién, entregables, plazo, exclusiones, requisitos del cliente) (FR-005; depende de la aclaración 3) — escrito; falta revisión tuya
+- [x] T014 Guion del video de 2–3 min + lista de capturas/GIF (FR-006) — `docs/VIDEO_GUION.md`; la grabación la haces tú
+- [x] T015 `materiales/` con viñetas de CV, post de LinkedIn y descripción de servicio, cada cifra con su fuente (FR-010, SC-003) — `materiales/` (3 archivos); borradores para aprobar
 
 ## Fase 5 — Revisión y publicación (requiere tu aprobación)
 - [ ] T016 Revisión final: una persona ajena sigue el README (SC-004); revisión de seguridad del repositorio completo

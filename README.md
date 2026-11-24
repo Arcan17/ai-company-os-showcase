@@ -73,10 +73,12 @@ Detalle: [`docs/demo/REAL_VS_SIMULADO.md`](docs/demo/REAL_VS_SIMULADO.md).
 Una sola máquina y SQLite; sin recuperación de contraseña ni TLS propios; probado con español y un caso de servicio técnico; un fallo de ejecución no se reintenta solo (decisión deliberada: reintentar sin reconciliar efectos podría duplicar trabajo). Pendientes explícitos del camino a un piloto (proveedor real, MFA verificado, hosting, región de datos, contratos): [`docs/v07/`](docs/v07/).
 
 ## Mapa de documentos
-**Empieza por el [caso de estudio](docs/CASO_DE_ESTUDIO.md)** (cuatro historias de ingeniería con su evidencia) · [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) · [`docs/v06/`](docs/v06/) acceso y sesiones, copias y restauración, límites del canal público, recuperación de ejecuciones · [`docs/v07/`](docs/v07/) auditoría de identidad y tenancy, modo piloto, identidad e invitaciones, vínculo del dueño · [`docs/demo/`](docs/demo/) guion y runbook · [`qa/`](qa/) herramientas de auditoría y mutación.
+**Empieza por el [caso de estudio](docs/CASO_DE_ESTUDIO.md)** (cuatro historias de ingeniería con su evidencia) · [`docs/SEGURIDAD.md`](docs/SEGURIDAD.md) qué se probó y qué no · [`docs/ARQUITECTURA_V07.md`](docs/ARQUITECTURA_V07.md) diagramas · [`docs/oferta/PILOTO_A_MEDIDA.md`](docs/oferta/PILOTO_A_MEDIDA.md) la oferta · [`docs/VIDEO_GUION.md`](docs/VIDEO_GUION.md) · [`materiales/`](materiales/) textos para CV, LinkedIn y servicio · [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) · [`docs/v06/`](docs/v06/) acceso y sesiones, copias y restauración, límites del canal público, recuperación de ejecuciones · [`docs/v07/`](docs/v07/) auditoría de identidad y tenancy, modo piloto, identidad e invitaciones, vínculo del dueño · [`docs/demo/`](docs/demo/) guion y runbook · [`qa/`](qa/) herramientas de auditoría y mutación.
 
 ## Cifras y su fuente
 Las cifras de este README salen de estos comandos, ejecutados sobre un clon limpio de este repositorio: `pytest --collect-only -q` (752) · `python qa/mutations_v07_p{1,2,25}.py --list | wc -l` (29, 45, 39) · listas de pruebas de `frontend/e2e*` (13 + 4 + 2).
 
-## Licencia
-Por definir por el autor antes de publicar (ver `SANEAMIENTO.md` y la especificación en `specs/`).
+## Licencia y contacto
+**Código visible, todos los derechos reservados** (ver [`LICENSE`](LICENSE)): puedes leerlo, clonarlo y ejecutarlo localmente para **evaluar** mi trabajo; no puedes copiarlo, redistribuirlo ni usarlo en un producto o servicio sin autorización escrita. Los datos son ficticios y el software se entrega «tal cual».
+
+¿Hablamos? Mi trabajo y contacto: [LinkedIn](https://www.linkedin.com/in/bastian-altamirano-3805b4309/) · [portafolio](https://portfolio-seven-dusky-80.vercel.app). Si te interesa un **piloto a medida**, mira [`docs/oferta/PILOTO_A_MEDIDA.md`](docs/oferta/PILOTO_A_MEDIDA.md).

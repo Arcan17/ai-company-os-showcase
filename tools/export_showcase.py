@@ -20,7 +20,7 @@ INCLUDE = (
     "frontend/src/", "frontend/e2e/", "frontend/e2e_pilot/",
     "frontend/package.json", "frontend/package-lock.json", "frontend/tsconfig.json", "frontend/vite.config.ts", "frontend/index.html",
     "frontend/postcss.config.js", "frontend/tailwind.config.js", "frontend/playwright",    # todas las configuraciones de Playwright (las pruebas de seguridad del repositorio leen la de auditoría)
-    "qa/", ".github/workflows/ci.yml", ".gitignore", "run_demo.sh", "run_demo_comercial.sh", "run_v05_lab.sh",    # los lanzadores los exigen las pruebas de seguridad del propio repositorio
+    "qa/", ".gitignore", "run_demo.sh", "run_demo_comercial.sh", "run_v05_lab.sh",    # los lanzadores los exigen las pruebas de seguridad del propio repositorio
     "docs/ARCHITECTURE.md", "docs/ROADMAP_V1_PRODUCTO.md", "docs/v05/", "docs/v06/", "docs/v07/", "docs/screenshots/",
     "docs/demo/REAL_VS_SIMULADO.md", "docs/demo/RUNBOOK_DEMO.md", "docs/demo/screenshots/",
 )
@@ -29,7 +29,9 @@ TEXT_EXT = {".md", ".py", ".ts", ".tsx", ".js", ".json", ".yml", ".yaml", ".toml
 
 # Reescrituras en la COPIA (el valor son las historias de ingeniería; no el nombre de la herramienta que hizo cada revisión).
 DROP_LINE = re.compile(r"NEXT_EXACT_STEP|ChatGPT|Claude Code|memoria-conversaciones")
-REPLACE = [(re.compile(r"\bCodex\b"), "revisión automatizada")]
+REPLACE = [(re.compile(r"\bCodex\b"), "revisión automatizada"),
+           (re.compile(r"\[([^\]]+)\]\(DEMO_COMERCIAL_V04\.md\)"), r"\1"),
+           (re.compile(r"ver `DEMO_COMERCIAL_V04\.md` §5"), "ver `docs/oferta/PILOTO_A_MEDIDA.md`")]       # el documento de planificación no se publica: el enlace queda como texto
 
 
 def tracked(src: Path) -> list[str]:

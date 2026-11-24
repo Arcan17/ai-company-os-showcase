@@ -38,7 +38,7 @@ Construir funcionalidades nuevas del producto (PR B, P3/WorkOS, despliegues, hos
 ## 6. Supuestos
 Datos y cuentas 100 % ficticios; el simulado de identidad solo existe en pruebas; el repositorio privado seguirá siendo la fuente de verdad (la vitrina es una **copia publicada a mano**, no un espejo); el contacto público se define por Bastian (no se incluye ningún correo personal por defecto).
 
-## 7. Aclaraciones pendientes (máx. 3; con recomendación)
-1. **Licencia:** ¿código abierto (MIT) o «código visible, todos los derechos reservados»? *Recomendado:* **visible, todos los derechos reservados** (evita que un tercero revenda el producto que quieres ofrecer; sigue sirviendo para empleo).
-2. **Nombre y contacto públicos:** ¿qué contacto aparece (LinkedIn/portafolio, no el correo)? *Recomendado:* LinkedIn + página del portafolio.
-3. **Oferta y precio:** ¿se publica un precio de referencia o solo «cotización a medida»? *Recomendado:* **sin precio público** hasta tener al menos un piloto real que lo calibre.
+## 7. Aclaraciones — RESUELTAS (2026-11-24, Bastian aprobó las recomendaciones)
+1. **Licencia:** código visible, **todos los derechos reservados** (puede leerse y ejecutarse localmente para evaluar el trabajo; sin copiar, redistribuir ni usar en productos/servicios). → `LICENSE`.
+2. **Contacto público:** LinkedIn + portafolio (no el correo). → README y oferta.
+3. **Oferta y precio:** **sin precio público**; cotización a medida tras un taller; pago por hitos. → `docs/oferta/PILOTO_A_MEDIDA.md`.

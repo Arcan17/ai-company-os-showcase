@@ -1,4 +1,4 @@
-# AI Company OS — pruebas en runner Linux aislado. No usa datos del Mac, credenciales reales ni Safari.
+# AI Company OS (vitrina) — pruebas en runner Linux aislado. No usa datos del Mac, credenciales reales ni Safari. Este archivo es PROPIO de la vitrina: el exportador no lo sobrescribe.
 name: CI
 
 on:
@@ -42,6 +42,11 @@ jobs:
           python -m venv backend/.venv
           backend/.venv/bin/python -m pip install --disable-pip-version-check -r backend/requirements.txt
           mkdir -p backend/data
+
+      - name: Sanitization check (no absolute paths, real e-mails, internal tool names, keys or forbidden files) + its mutation tests
+        run: |
+          python tools/check_showcase.py
+          backend/.venv/bin/python -m pytest -q tests/test_check_showcase.py
 
       - name: Install restic (encrypted off-machine backup tool; used with a LOCAL temp repository only)
         run: |

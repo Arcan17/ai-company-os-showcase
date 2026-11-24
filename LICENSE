@@ -1,0 +1,17 @@
+AI Company OS — código visible, todos los derechos reservados
+Copyright © 2026 Bastian Altamirano. Todos los derechos reservados.
+
+ESPAÑOL
+Este repositorio es PÚBLICO PARA SU LECTURA Y EVALUACIÓN, no es software de código abierto. Se concede, sin costo y de forma revocable, permiso para:
+  1. leer y estudiar el código y la documentación;
+  2. clonarlo y ejecutarlo localmente, con los datos ficticios incluidos, únicamente para evaluar el trabajo del autor (por ejemplo, en un proceso de selección o una evaluación técnica).
+NO se concede permiso para: copiar, modificar, redistribuir o publicar el código o partes sustanciales de él; usarlo en productos o servicios, comerciales o no; ofrecerlo como servicio alojado; ni entrenar modelos con él. Cualquier otro uso requiere autorización escrita del autor.
+Los datos, personas y empresas del repositorio son FICTICIOS. El software se entrega «tal cual», sin garantía de ningún tipo; no es asesoría legal ni una certificación de seguridad. Los nombres «AI Company OS», «Clima Sur» y «Motor Norte» son del proyecto de demostración.
+Las dependencias de terceros mantienen sus propias licencias (ver backend/requirements.txt y frontend/package.json).
+
+ENGLISH
+This repository is PUBLIC FOR READING AND EVALUATION; it is NOT open-source software. Free, revocable permission is granted to (1) read and study the code and documentation and (2) clone and run it locally, with the bundled fictitious data, solely to evaluate the author's work (e.g. in a hiring process or technical review).
+No permission is granted to copy, modify, redistribute or publish the code or substantial parts of it; to use it in any product or service, commercial or not; to offer it as a hosted service; or to train models on it. Any other use requires the author's written permission.
+All data, people and companies in this repository are FICTITIOUS. The software is provided "as is", without warranty of any kind; it is not legal advice or a security certification. Third-party dependencies keep their own licenses.
+
+Contacto / Contact: https://www.linkedin.com/in/bastian-altamirano-3805b4309/ · https://portfolio-seven-dusky-80.vercel.app
