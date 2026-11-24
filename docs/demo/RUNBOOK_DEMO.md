@@ -1,6 +1,6 @@
 # Runbook — demo comercial V0.4 (para presentar desde el Mac)
 
-Todo en **127.0.0.1**, datos **100 % ficticios**, motor **determinista** (sin LLM, sin red). Independiente del laboratorio `:8731`. Guion de referencia: `DEMO_COMERCIAL_V04.md` · qué decir/no decir: [`REAL_VS_SIMULADO.md`](REAL_VS_SIMULADO.md).
+Todo en **127.0.0.1**, datos **100 % ficticios**, motor **determinista** (sin LLM, sin red). Independiente del laboratorio `:8731`. Guion de referencia: [`VIDEO_GUION.md`](../VIDEO_GUION.md) · qué decir/no decir: [`REAL_VS_SIMULADO.md`](REAL_VS_SIMULADO.md).
 
 ## 1. Comandos (desde la raíz del repo)
 ```bash

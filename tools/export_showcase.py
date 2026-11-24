@@ -31,7 +31,8 @@ TEXT_EXT = {".md", ".py", ".ts", ".tsx", ".js", ".json", ".yml", ".yaml", ".toml
 DROP_LINE = re.compile(r"NEXT_EXACT_STEP|ChatGPT|Claude Code|memoria-conversaciones")
 REPLACE = [(re.compile(r"\bCodex\b"), "revisión automatizada"),
            (re.compile(r"\[([^\]]+)\]\(DEMO_COMERCIAL_V04\.md\)"), r"\1"),
-           (re.compile(r"ver `DEMO_COMERCIAL_V04\.md` §5"), "ver `docs/oferta/PILOTO_A_MEDIDA.md`")]       # el documento de planificación no se publica: el enlace queda como texto
+           (re.compile(r"ver `DEMO_COMERCIAL_V04\.md` §5"), "ver `docs/oferta/PILOTO_A_MEDIDA.md`"),
+           (re.compile(r"`DEMO_COMERCIAL_V04\.md`"), "[`VIDEO_GUION.md`](../VIDEO_GUION.md)")]       # el documento de planificación no se publica: el enlace queda como texto
 
 
 def tracked(src: Path) -> list[str]:
