@@ -1,6 +1,6 @@
 # Borrador de publicación de LinkedIn (para aprobar y publicar TÚ)
 
-> No se publica nada desde aquí. Antes de publicar: crea el repositorio público (decisión tuya), reemplaza `https://github.com/Arcan17/ai-company-os-showcase` y revisa el tono.
+> Borrador para que lo revises y lo publiques TÚ (nada se publica desde aquí). El enlace ya apunta al repositorio público.
 
 ---
 
