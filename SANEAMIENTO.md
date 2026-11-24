@@ -6,7 +6,7 @@
 
 | Categoría | Cómo se buscó | Hallazgo | Acción en la vitrina |
 |---|---|---|---|
-| Rutas absolutas del Mac (`/Users/…`) | `git grep -I -l "/Users/bastian"` | **0 archivos** | La comprobación automática lo seguirá exigiendo |
+| Rutas absolutas del Mac (`/Users/<usuario>/…`) | `git grep -I -l "/Users/<usuario>"` | **0 archivos** | La comprobación automática lo seguirá exigiendo |
 | Correos reales (gmail/hotmail/outlook/yahoo/icloud) | `git grep -I -n -E "…@(gmail\|hotmail\|…)"` | **0** (los correos de la demo son `*.test`) | Ídem; el contacto público lo define Bastian |
 | Secretos (claves, tokens, contraseñas literales) | `git grep -I -n -i -E "(api_key\|secret\|token\|password)\s*[:=]\s*'…16+"` | **0 reales.** 4 coincidencias son `retry_secret` de **pruebas** con valores ficticios | Se conservan (son datos de prueba); la comprobación las excluye por ruta `backend/tests/` |
 | Archivos sensibles rastreados (`.env`, `.pem`, `.key`, `.sqlite`, `.db`, `.log`, `.bak`) | `git ls-files \| grep …` | **0** (`backend/data/` está en `.gitignore`) | No se copia `backend/data/` |
@@ -19,7 +19,7 @@
 `backend/data/`, `backups/`, `.venv`, `node_modules`, `frontend/dist*`, `graphify-out/`, los scripts de laboratorio local (`run_v05_lab.sh`, `run_demo_comercial.sh` si dependen de rutas propias), `docs/qa/*.json` de auditorías de modelos locales salvo que el caso de estudio los cite, y **todo el historial de Git** (la vitrina empieza con un commit propio).
 
 ## 3. Lo que debe vigilar la comprobación automática (FR-007)
-Patrones: rutas `/Users/…`; correos de proveedores públicos; `NEXT_EXACT_STEP`, `ChatGPT`, `Codex`, `Claude Code`, `memoria-conversaciones`; formas de clave (`sk-…`, `ghp_…`, `AKIA…`, bloques `-----BEGIN … PRIVATE KEY-----`); extensiones `.env`, `.pem`, `.key`, `.sqlite`, `.db`. Cada categoría tendrá su **mutación** (se planta un caso y la comprobación debe fallar), como en el resto del proyecto.
+Patrones: rutas `/Users/<usuario>/…`; correos de proveedores públicos; `NEXT_EXACT_STEP`, `ChatGPT`, `Codex`, `Claude Code`, `memoria-conversaciones`; formas de clave (`sk-…`, `ghp_…`, `AKIA…`, bloques `-----BEGIN … PRIVATE KEY-----`); extensiones `.env`, `.pem`, `.key`, `.sqlite`, `.db`. Cada categoría tendrá su **mutación** (se planta un caso y la comprobación debe fallar), como en el resto del proyecto.
 
 ## 4. Pendiente de tu decisión antes de publicar
 Licencia, contacto público y política de precio (ver `specs/001-showcase-portfolio-offer/spec.md` §7). Y la **aprobación explícita** para crear el repositorio público en GitHub: hasta entonces todo vive solo en esta carpeta local.

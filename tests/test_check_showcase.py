@@ -62,5 +62,5 @@ def test_placeholder_user_paths_are_not_flagged_but_a_real_looking_one_is(tmp_pa
     root = clean(tmp_path)
     (root / "docs/p.md").write_text("logs en /Users/ejemplo/Library/Logs y /Users/example/x\n")
     assert mod.scan(root) == []
-    (root / "docs/p.md").write_text("logs en /Users/bastian/Library/Logs\n")
+    (root / "docs/p.md").write_text("logs en /Users/maria/Library/Logs\n")
     assert [c for _, c, _ in mod.scan(root)] == ["ruta_absoluta"]

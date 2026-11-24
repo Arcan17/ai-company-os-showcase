@@ -18,7 +18,7 @@ Mapeo un flujo de tu negocio (solicitud → presupuesto → aprobación → ejec
 Puesta en producción ni alojamiento · integraciones reales (WhatsApp, correo, ERP, pagos) · inicio de sesión real con MFA · datos personales reales · garantías de ahorro o resultados.
 
 ## Por qué confiar en el trabajo
-Todo está respaldado por evidencia reproducible: 752 pruebas, 113 mutaciones de seguridad, pruebas de aislamiento entre empresas y un caso de estudio público. Detalle en el repositorio: [ENLACE].
+Todo está respaldado por evidencia reproducible: 752 pruebas, 113 mutaciones de seguridad, pruebas de aislamiento entre empresas y un caso de estudio público. Detalle en el repositorio: https://github.com/Arcan17/ai-company-os-showcase.
 
 ## Preguntas frecuentes
 - **¿Es un software que ya puedo usar en producción?** No. Es un piloto de descubrimiento y prototipo; producción es una fase aparte que se cotiza si el informe dice «go».

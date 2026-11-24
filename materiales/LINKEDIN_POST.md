@@ -1,6 +1,6 @@
 # Borrador de publicación de LinkedIn (para aprobar y publicar TÚ)
 
-> No se publica nada desde aquí. Antes de publicar: crea el repositorio público (decisión tuya), reemplaza `[ENLACE]` y revisa el tono.
+> No se publica nada desde aquí. Antes de publicar: crea el repositorio público (decisión tuya), reemplaza `https://github.com/Arcan17/ai-company-os-showcase` y revisa el tono.
 
 ---
 
@@ -15,7 +15,7 @@ Lo que más me importó fue poder demostrarlo:
 
 Y lo que **no** es: no es un SaaS en producción, no tiene proveedor de identidad real ni MFA, y WhatsApp/correo están simulados. Prefiero decirlo yo.
 
-Código visible para evaluar mi trabajo, con un caso de estudio de cuatro historias de ingeniería: [ENLACE]
+Código visible para evaluar mi trabajo, con un caso de estudio de cuatro historias de ingeniería: https://github.com/Arcan17/ai-company-os-showcase
 
 Si tienes un negocio donde las aprobaciones y la trazabilidad hoy viven en chats y planillas, conversemos sobre un **piloto a medida**.
 
