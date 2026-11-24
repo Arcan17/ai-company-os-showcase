@@ -1,0 +1,83 @@
+# AI Company OS — pruebas en runner Linux aislado. No usa datos del Mac, credenciales reales ni Safari.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Backend + frontend + E2E
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      AICOS_LLM_PROVIDER: deterministic
+      CI: "true"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install backend dependencies in isolated virtualenv
+        run: |
+          python -m venv backend/.venv
+          backend/.venv/bin/python -m pip install --disable-pip-version-check -r backend/requirements.txt
+          mkdir -p backend/data
+
+      - name: Install restic (encrypted off-machine backup tool; used with a LOCAL temp repository only)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq restic
+          restic version
+
+      - name: Run backend tests
+        env:
+          # The backup tests use a real restic against a temporary local repository: a runner without restic must FAIL, not skip silently.
+          AICOS_REQUIRE_RESTIC: "1"
+        run: backend/.venv/bin/python -m pytest -q backend/tests
+
+      - name: Build frontend
+        working-directory: frontend
+        run: |
+          npm ci
+          BUILD_DIR=dist-v05 npm run build
+
+      - name: Install headless Chromium for Playwright
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Playwright regression (A–E + configurable company)
+        working-directory: frontend
+        run: npx playwright test
+
+      - name: Run commercial demo E2E
+        working-directory: frontend
+        # The E2E restart test spawns a replacement server: it must inherit the same
+        # absolute static frontend directory as the original Playwright webServer.
+        env:
+          AICOS_STATIC_DIR: ${{ github.workspace }}/frontend/dist-v05
+        run: npx playwright test -c playwright.demo.config.ts
+
+      - name: Run pilot-mode E2E (AICOS_ENV=pilot, empty database, __Host- cookie in real Chromium)
+        working-directory: frontend
+        # Its own port and database (backend/data/e2e_pilot.db); the company is created by the operator CLI, never by the demo seed.
+        run: npx playwright test -c playwright.pilot.config.ts

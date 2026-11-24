@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+*.pyc
+backend/data/
+node_modules/
+frontend/dist/
+frontend/dist-v05/
+frontend/test-results/
+frontend/playwright-report/
+.env
+.env.*
+!.env.example
+.pytest_cache/
+graphify-out/
+backend/backups/
