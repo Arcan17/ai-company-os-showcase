@@ -2,6 +2,8 @@ import { useState } from "react";
 import { api, Me, money } from "../api";
 import { usePoll } from "../pages/Dashboard";
 import { DetailLink } from "./Detail";
+import { TourButton } from "../DemoTour";
+import ResultsCard from "../ResultsCard";
 import { requestStatus, STAGES, stageIndex } from "./copy";
 
 const clean = (s: string) => s.replace(/_/g, " ").replace(/\$\s?(\d{1,3})[,.](\d{3})/g, "$$$1.$2");
@@ -49,7 +51,8 @@ export default function OwnerHome({ me }: { me: Me }) {
           <div key={r.id} className="border-t first:border-0 border-white/60 py-3" data-testid="s-active"><div className="text-sm font-medium">{r.customer}</div>
             <div className="text-xs text-slate-500 mb-2">{requestStatus(r.status)}</div><Progress status={r.status} /></div>))}
       </div>
-      <div className="mt-4 text-right"><DetailLink to="/dashboard" /></div>
+      {me.permissions.includes("company.summary") && <div className="mt-4"><ResultsCard /></div>}
+      <div className="mt-4 flex items-center justify-between gap-3"><TourButton /><DetailLink to="/dashboard" /></div>
     </div>
   );
 }

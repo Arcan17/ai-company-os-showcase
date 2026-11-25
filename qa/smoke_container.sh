@@ -3,7 +3,7 @@
 # Uso (raíz del repo):  qa/smoke_container.sh      Necesita Podman o Docker con «compose».
 set -euo pipefail
 cd "$(dirname "$0")/.."
-export PORT="${SMOKE_PORT:-18731}" COMPOSE_PROJECT_NAME="aicos-smoke" AICOS_STEP_DELAY=0
+export PORT="${SMOKE_PORT:-18731}" COMPOSE_PROJECT_NAME="aicos-smoke" AICOS_STEP_DELAY=0 AICOS_DEMO_EXAMPLE=0   # la prueba de humo parte de una base vacía (el ejemplo se prueba aparte)
 cleanup() { ./start.sh reset >/dev/null 2>&1 || true; }
 trap cleanup EXIT
 ./start.sh

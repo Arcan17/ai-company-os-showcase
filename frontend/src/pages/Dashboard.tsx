@@ -1,3 +1,5 @@
+import { TourButton } from "../DemoTour";
+import ResultsCard from "../ResultsCard";
 import { useEffect, useState } from "react";
 import { api, Me, money, STATUS_LABEL } from "../api";
 import { Chip, Empty, fmtDate, PageHeader, StatusChip } from "../ui";
@@ -49,8 +51,9 @@ export default function Dashboard({ me }: { me: Me }) {
   return (
     <div>
       <PageHeader title={`Estado de ${me.company.name}`} sub={me.company.industry}
-        right={<Chip tone={d.provider_mode === "llm" ? "violet" : "sky"} title="Motor que toma las decisiones de clasificación">
-          {d.provider_mode === "llm" ? (String(d.provider).startsWith("anthropic") ? `IA de pago (API) · ${d.provider}` : `LLM local · ${d.provider}`) : "Motor determinista de demostración (sin LLM)"}</Chip>} />
+        right={<span className="flex items-center gap-2 flex-wrap justify-end">{me.permissions.includes("approvals.decide") && <TourButton />}<Chip tone={d.provider_mode === "llm" ? "violet" : "sky"} title="Motor que toma las decisiones de clasificación">
+          {d.provider_mode === "llm" ? (String(d.provider).startsWith("anthropic") ? `IA de pago (API) · ${d.provider}` : `LLM local · ${d.provider}`) : "Motor determinista de demostración (sin LLM)"}</Chip></span>} />
+      {me.permissions.includes("company.summary") && <ResultsCard />}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <Kpi id="kpi-requests" label="Solicitudes" value={d.total_requests} sub={`${d.active_requests} activas · ${d.historic_requests} históricas (cerradas/fallidas)`} />
         <Kpi id="kpi-active" label="Ejecuciones activas" value={d.active_runs} tone="text-brand-600" />

@@ -10,7 +10,7 @@ from pathlib import Path
 ROOT = Path(sys.argv[1]).resolve() if len(sys.argv) > 1 else Path(__file__).resolve().parents[1]
 
 # archivo → {cifra: [patrones con UN grupo de captura numérico]}; cada patrón DEBE aparecer al menos una vez en ese archivo.
-E2E = [r"\| (\d+ \+ \d+ \+ \d+ \+ \d+) \|"]
+E2E = [r"\| (\d+(?: \+ \d+)+) \|"]          # 18 + 4 + 2 + 2 + 4: tantas partes como configuraciones de navegador
 EXPECT = {
     "README.md": {"tests": [r"\| \*\*(\d+)\*\* \| `cd backend", r"collect-only -q` \((\d+)\)"], "mutaciones": [r"\*\*(\d+)\*\* \(29 "], "e2e": E2E},
     "docs/CASO_DE_ESTUDIO.md": {"tests": [r"Pruebas automáticas \| (\d+) \|"], "mutaciones": [r"\*\*(\d+)\*\* mutaciones", r"\| (\d+) \(29 \+"], "e2e": E2E},

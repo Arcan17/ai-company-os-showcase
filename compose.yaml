@@ -20,6 +20,7 @@ services:
     pids_limit: 256
     restart: unless-stopped
     environment:
+      AICOS_DEMO_EXAMPLE: "${AICOS_DEMO_EXAMPLE:-1}"   # la demo abre con una decisión pendiente de ejemplo (=0 para abrirla vacía)
       AICOS_STEP_DELAY: "${AICOS_STEP_DELAY:-0.55}"   # ritmo para poder mirar el grafo; 0 en pruebas
       # Demo PÚBLICA (un espacio aislado por visitante; ver docs/v09). Se activa con: AICOS_PUBLIC_DEMO=1 ./start.sh
       AICOS_PUBLIC_DEMO: "${AICOS_PUBLIC_DEMO:-0}"

@@ -9,30 +9,30 @@ async function enter(page: any, who: string) {
   await expect(page.getByTestId("user-name")).toBeVisible();
 }
 
-test("dos visitantes a la vez: el recorrido guiado funciona y sus espacios están aislados", async ({ browser }) => {
+test("dos visitantes a la vez: cada uno abre con su decisión de ejemplo, el recorrido guiado funciona y sus espacios están aislados", async ({ browser }) => {
   const a = await (await browser.newContext()).newPage();
   const b = await (await browser.newContext()).newPage();
   await enter(a, "dueno@climasur.test"); await enter(b, "dueno@climasur.test");
 
-  // recorrido guiado: 5 pasos, se puede cerrar y reabrir
+  // primera impresión (spec 006): cada visitante abre con SU decisión pendiente de ejemplo, no con una pantalla vacía
+  await expect(a.getByTestId("s-decision")).toContainText("$63.000");
+  await expect(b.getByTestId("s-decision")).toContainText("$63.000");
+
+  // recorrido guiado de 4 pasos leyendo el estado: el paso 1 (ver la decisión) ya está cumplido; se puede cerrar y reabrir
   await expect(a.getByTestId("tour")).toBeVisible();
-  await expect(a.getByTestId("tour")).toContainText("paso 1 de 5");
-  for (let i = 0; i < 4; i++) await a.getByTestId("tour-next").click();
-  await expect(a.getByTestId("tour-title")).toContainText("modo Completo");
+  await expect(a.getByTestId("tour")).toContainText("paso 2 de 4");
   await a.getByTestId("tour-close").click();
   await expect(a.getByTestId("tour")).toHaveCount(0);
   await a.getByTestId("tour-open").click();
   await expect(a.getByTestId("tour")).toBeVisible();
 
-  // A hace llegar una solicitud y la aprueba (en la vista simple); B no ve nada de eso
-  await a.getByTestId("mode-complete").click();
-  await a.goto("/#/cliente/clima-sur");
-  await a.getByTestId("scenario-A").click(); await a.getByTestId("send-chat").click();
-  await expect(a.getByTestId("conversation")).toBeVisible();
-  await a.goto("/#/dashboard");
-  await expect(a.getByTestId("kpi-approvals")).toHaveText("1", { timeout: 20_000 });
-  await b.goto("/#/dashboard"); await b.reload();
-  await expect(b.getByTestId("s-nothing")).toBeVisible();                       // B (vista simple) sigue en «Nada requiere tu decisión hoy»: jamás vio la solicitud de A
+  // A aprueba SU decisión (la persona, no el recorrido); la de B sigue pendiente: espacios aislados
+  await a.getByTestId("s-approve").click();
+  await expect(a.getByTestId("tour-title")).toContainText("qué quedó registrado", { timeout: 15_000 });
+  await b.reload();
+  await expect(b.getByTestId("s-decision")).toBeVisible();                       // jamás vio lo que hizo A
+  await a.reload();
+  await expect(a.getByTestId("s-nothing")).toBeVisible();
   await a.screenshot({ path: "../docs/v09/screenshots/01-demo-publica.png" });
   await a.context().close(); await b.context().close();
 });

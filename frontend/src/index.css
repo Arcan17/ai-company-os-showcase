@@ -79,3 +79,6 @@ html[data-static] .card::after, html[data-static] .glass::after { display: none;
 html { scroll-behavior: smooth; }
 @media (prefers-reduced-motion: reduce) { body::before, .page-in, .page-in > * { animation: none; } .card:hover, .nav-item:hover { transform: none; } html { scroll-behavior: auto; } }
 @media (prefers-reduced-transparency: reduce) { .card::after, .glass::after { display: none; } }
+
+/* V0.11 (spec 006): el recorrido guiado señala un elemento con un borde; no cambia su comportamiento */
+.tour-hl { outline: 3px solid rgb(99 102 241 / .85); outline-offset: 4px; border-radius: 1rem; }

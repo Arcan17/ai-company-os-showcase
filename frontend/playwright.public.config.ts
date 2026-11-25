@@ -10,7 +10,7 @@ export default defineConfig({
   testDir: "./e2e_public", timeout: 90_000, workers: 1, fullyParallel: false, reporter: [["list"]],
   use: { baseURL: `http://127.0.0.1:${PUBLIC_PORT}`, screenshot: "off", trace: "off", launchOptions: { executablePath }, viewport: { width: 1440, height: 900 } },
   webServer: {
-    command: `rm -rf ../backend/data/e2e_public && cd ../backend && AICOS_PUBLIC_DEMO=1 AICOS_PUBLIC_DEMO_DIR=data/e2e_public AICOS_STATIC_DIR=${process.cwd()}/${process.env.AICOS_UI_DIR ?? "dist-v05"} AICOS_STEP_DELAY=0.12 .venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port ${PUBLIC_PORT} --no-proxy-headers`,
+    command: `rm -rf ../backend/data/e2e_public && cd ../backend && AICOS_PUBLIC_DEMO=1 AICOS_DEMO_EXAMPLE=1 AICOS_PUBLIC_DEMO_DIR=data/e2e_public AICOS_STATIC_DIR=${process.cwd()}/${process.env.AICOS_UI_DIR ?? "dist-v05"} AICOS_STEP_DELAY=0.12 .venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port ${PUBLIC_PORT} --no-proxy-headers`,
     url: `http://127.0.0.1:${PUBLIC_PORT}/api/health`, reuseExistingServer: false, timeout: 60_000,
   },
 });

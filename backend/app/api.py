@@ -97,6 +97,10 @@ def create_app(db_url: str | None = None, *, identity_provider=None) -> FastAPI:
     if not keeper.held:
         logging.getLogger("aicos").warning("otra instancia viva usa esta base de datos: esta queda en espera (solo lectura) y tomará el relevo si la otra se detiene")
 
+    from .demo_example import ensure_example   # V0.11 (spec 006): solo actúa con AICOS_DEMO_EXAMPLE=1, fuera del piloto y en una base sin uso
+    if keeper.held:                                     # solo la instancia activa escribe (una en espera es de solo lectura)
+        ensure_example(eng, orch)
+
     @asynccontextmanager
     async def lifespan(app):
         try:
@@ -188,7 +192,9 @@ def create_app(db_url: str | None = None, *, identity_provider=None) -> FastAPI:
     if not pilot:   # V0.7 P1: en el piloto no existe ninguna ruta de demostración (404 real, no solo oculta)
         @app.get("/api/demo/info")
         def demo_info():
-            return _demo_info() if settings.demo_mode else {"demo": False}
+            # V0.11 (spec 006): `example: true` se suma SOLO cuando hay datos de ejemplo y SIN cambiar `demo` (= demo comercial, el que enciende el banner); en el piloto la ruta no existe
+            base = _demo_info() if settings.demo_mode else {"demo": False}
+            return {**base, "example": True} if settings.demo_example else base       # apagado = la respuesta de siempre, idéntica
 
     if settings.demo_mode:
         PERSONAS = {"owner": "owner", "admin": "admin", "tech": "technician"}
@@ -392,6 +398,24 @@ def create_app(db_url: str | None = None, *, identity_provider=None) -> FastAPI:
             return resp
 
     # ---------------- read models ----------------
+    RESULTS_DAYS = 30
+
+    @app.get("/api/results")
+    def results(user=Depends(current_user)):
+        """V0.11 (spec 006, US3) — tres cifras para la dueña, calculadas SOLO con registros que el sistema ya guarda (nada estimado ni de relleno), de los últimos 30 días y de SU empresa:
+        solicitudes cerradas, aprobaciones ya decididas y la MEDIANA de horas entre que se creó y se cerró una solicitud. Sin solicitudes cerradas la mediana es `null` (≠ 0)."""
+        need(user, "company.summary")
+        from datetime import datetime, timedelta, timezone
+        from statistics import median
+        cid = user["company_id"]
+        since = (datetime.now(timezone.utc) - timedelta(days=RESULTS_DAYS)).isoformat(timespec="milliseconds")
+        with eng.connect() as c:
+            closed = all_(c, "SELECT created_at,updated_at FROM requests WHERE company_id=:c AND status='cerrada' AND updated_at>=:s", c=cid, s=since)   # `updated_at` = instante de cierre (nada lo toca después)
+            decided = one(c, "SELECT COUNT(*) AS n FROM approvals WHERE company_id=:c AND status<>'pendiente' AND decided_at>=:s", c=cid, s=since)["n"]
+        hours = [(datetime.fromisoformat(r["updated_at"]) - datetime.fromisoformat(r["created_at"])).total_seconds() / 3600 for r in closed]
+        return {"period_days": RESULTS_DAYS, "since": since, "requests_closed": len(closed), "approvals_decided": decided,
+                "median_hours_to_close": round(median(hours), 2) if hours else None}
+
     @app.get("/api/dashboard")
     def dashboard(user=Depends(current_user)):
         cid = user["company_id"]

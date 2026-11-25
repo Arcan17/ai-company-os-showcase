@@ -167,6 +167,8 @@ class VisitorRouter:
         path = scope.get("path", "")
         if scope["type"] == "http" and scope["method"] in ("GET", "HEAD") and path == "/api/health":
             return await JSONResponse({"ok": True, "public_demo": True, "active": True})(scope, receive, send)
+        if scope["type"] == "http" and scope["method"] in ("GET", "HEAD") and path == "/api/demo/info":
+            return await JSONResponse({"demo": False, "public": True, "example": bool(settings.demo_example)})(scope, receive, send)    # sin crear un espacio solo para preguntar
         if scope["type"] == "http" and scope["method"] == "GET" and path == "/api/public-demo/info":
             return await JSONResponse({"public_demo": True, "idle_minutes": self.idle // 60, "capacity": self.max, "active": len(self.spaces)})(scope, receive, send)
         if not path.startswith("/api"):

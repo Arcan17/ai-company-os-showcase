@@ -14,6 +14,7 @@ class Settings:
     db_url: str = os.environ.get("AICOS_DB_URL", f"sqlite:///{ROOT / 'data' / 'aicos.db'}")
     step_delay: float = float(os.environ.get("AICOS_STEP_DELAY", "0.55"))  # pacing so the graph is watchable
     sync_runs: bool = os.environ.get("AICOS_SYNC", "0") == "1"  # tests: run engine inline
+    demo_example: bool = os.environ.get("AICOS_DEMO_EXAMPLE", "0") == "1"  # V0.11 (spec 006): una demo abre con una decisión pendiente de ejemplo; APAGADO por defecto (suites, piloto y empresas del operador no cambian)
     llm_provider: str = os.environ.get("AICOS_LLM_PROVIDER", "deterministic")  # deterministic | ollama
     # V0.10 (spec 005, fase 2) — IA de pago (API de Anthropic). La CLAVE solo se lee del entorno (AICOS_ANTHROPIC_API_KEY, deliberadamente NO la variable estándar para no gastar por accidente con la de otra herramienta).
     anthropic_api_key: str = os.environ.get("AICOS_ANTHROPIC_API_KEY", "")

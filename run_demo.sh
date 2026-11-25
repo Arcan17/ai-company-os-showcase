@@ -12,6 +12,7 @@ if [ ! -d frontend/dist ]; then
   (cd frontend && npm ci && npm run build)
 fi
 [ "${AICOS_RESET:-0}" = "1" ] && rm -f backend/data/aicos.db* && echo "▶ Base de datos reiniciada"
+export AICOS_DEMO_EXAMPLE="${AICOS_DEMO_EXAMPLE:-1}"                       # la demo abre con una decisión pendiente de ejemplo (solo en una base sin uso; =0 para abrirla vacía)
 export AICOS_ALLOW_COMPANY_CREATION="${AICOS_ALLOW_COMPANY_CREATION:-1}"   # laboratorio LOCAL: permite crear empresas ficticias desde la pantalla de login (apágalo con =0)
 echo "▶ AI Company OS → http://127.0.0.1:${PORT}   (cuentas DEMO ficticias; contraseña demo1234)"
 echo "  Motor: ${AICOS_LLM_PROVIDER:-deterministic}   (AICOS_LLM_PROVIDER=ollama para el LLM local opcional)"
