@@ -88,6 +88,14 @@ jobs:
         working-directory: frontend
         run: npx playwright test -c playwright.public.config.ts
 
+      - name: "Run first-impression E2E (AICOS_DEMO_EXAMPLE=1; decisión de ejemplo, recorrido guiado y «Pensando…»)"
+        working-directory: frontend
+        run: npx playwright test -c playwright.firstimpression.config.ts
+
+      - name: "Run recording-kit walkthrough (rápido y sin video: el guion de la demo no se rompe en silencio)"
+        working-directory: frontend
+        run: npx playwright test -c playwright.record.config.ts
+
       - name: Run pilot-mode E2E (AICOS_ENV=pilot, empty database, __Host- cookie in real Chromium)
         working-directory: frontend
         # Its own port and database (backend/data/e2e_pilot.db); the company is created by the operator CLI, never by the demo seed.

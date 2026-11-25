@@ -19,7 +19,7 @@ def test_una_cifra_distinta_se_detecta():
 
 
 def test_el_total_de_navegador_debe_sumar_la_cifra_del_sitio():
-    t = (ROOT / "docs/CASO_DE_ESTUDIO.md").read_text().replace("| 18 + 4 + 2 + 2 + 4 |", "| 18 + 4 + 2 + 2 + 3 |")
+    t = (ROOT / "docs/CASO_DE_ESTUDIO.md").read_text().replace("| 18 + 4 + 2 + 2 + 5 + 1 |", "| 18 + 4 + 2 + 2 + 5 + 0 |")
     assert any("«e2e» dice" in e for e in cf.check(ROOT, texts={"docs/CASO_DE_ESTUDIO.md": t}))
 
 

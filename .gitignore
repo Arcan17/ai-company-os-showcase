@@ -13,3 +13,6 @@ frontend/playwright-report/
 .pytest_cache/
 graphify-out/
 backend/backups/
+
+# kit de grabación (video y GIF generados)
+grabaciones/

@@ -84,3 +84,24 @@ test.describe("celular", () => {
     expect(box!.x).toBeGreaterThanOrEqual(0); expect(box!.x + box!.width).toBeLessThanOrEqual(375);
   });
 });
+
+test("con un modelo de IA, mientras responde la pantalla muestra «Pensando…» con los segundos y no parece colgada", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("aicos.mode.default", "complete"));
+  // modelo lento SIMULADO (sin Ollama): el panel dice que el planificador es un LLM y la creación del plan tarda 3 s
+  await page.route("**/api/dashboard", async route => { const r = await route.fetch(); await route.fulfill({ response: r, json: { ...(await r.json()), provider_mode: "llm", provider: "ollama:modelo-falso" } }); });
+  await page.route("**/api/plans", async route => { if (route.request().method() === "POST") await new Promise(r => setTimeout(r, 3000)); await route.continue(); });
+  await enter(page);
+  await page.goto("/#/coordinator");
+  await expect(page.getByTestId("plan-input")).toBeVisible();
+  await page.waitForTimeout(500);                                               // da tiempo a que el panel informe que es un LLM
+  await page.getByTestId("plan-input").fill("Revisa las solicitudes pendientes");
+  await page.getByTestId("plan-submit").click();
+  await expect(page.getByTestId("plan-thinking")).toContainText("Pensando");
+  await expect(page.getByTestId("plan-thinking")).toContainText("ollama:modelo-falso");
+  await expect(page.getByTestId("plan-submit")).toHaveText("Pensando…");
+  await expect(page.getByTestId("plan-submit")).toBeDisabled();
+  await expect(page.getByTestId("plan-thinking-secs")).toHaveText(/^[1-9]\d* s$/, { timeout: 5_000 });   // el contador avanza
+  await expect(page.getByTestId("plan-thinking")).toHaveCount(0, { timeout: 15_000 });                    // al responder, desaparece
+  await expect(page.getByTestId("plan-submit")).toHaveText("Proponer plan");
+  await expect(page.getByTestId("plan-card")).toBeVisible();
+});

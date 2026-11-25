@@ -105,10 +105,18 @@ def test_una_empresa_del_operador_nunca_recibe_ejemplo(on, app, monkeypatch):
         assert c.execute(text("SELECT COUNT(*) FROM approvals WHERE company_id=:c"), {"c": otra}).scalar() == 0
 
 
-def test_con_un_modelo_de_ia_no_se_crea(app, monkeypatch):
+def test_con_un_modelo_de_ia_el_ejemplo_se_crea_con_el_motor_determinista_y_el_modelo_se_restaura(app, monkeypatch):
+    """La demo con IA local (run_demo_ia.sh) también abre con la decisión de ejemplo; el ejemplo lo arma el motor determinista (no el modelo) y el proveedor vuelve a ser el modelo."""
+    class Modelo:
+        mode, name = "llm", "modelo-falso"
+        def __getattr__(self, n):
+            raise AssertionError(f"el ejemplo NO debe usar el modelo ({n})")
     monkeypatch.setattr(settings, "demo_example", True)
-    monkeypatch.setattr(app.state.orch.provider, "mode", "llm", raising=False)
-    assert ensure_example(app.state.eng, app.state.orch) is False and count(app, "runs") == 0
+    modelo = Modelo()
+    app.state.orch.provider = modelo
+    assert ensure_example(app.state.eng, app.state.orch) is True and marks(app) == 1 and count(app, "approvals", "status='pendiente'") == 1
+    assert app.state.orch.provider is modelo                                   # el proveedor se restauró
+    assert settings.step_delay == 0                                           # (fixture `fast`) y el ritmo también
 
 
 # ───────────── demo pública: la plantilla se siembra una vez y cada visitante recibe su copia ─────────────

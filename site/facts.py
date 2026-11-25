@@ -9,7 +9,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 MUT_SCRIPTS = ["qa/mutations_v07_p1.py", "qa/mutations_v07_p2.py", "qa/mutations_v07_p25.py", "qa/mutations_v08.py", "qa/mutations_v09.py", "qa/mutations_v10.py", "qa/mutations_v11.py"]
-E2E_DIRS = ["frontend/e2e", "frontend/e2e_pilot", "frontend/e2e_public", "frontend/e2e_first"]
+E2E_DIRS = ["frontend/e2e", "frontend/e2e_pilot", "frontend/e2e_public", "frontend/e2e_first", "frontend/record"]
 E2E_SKIP = ("audit",)          # la auditoría QA tiene su propia configuración y no corre en el CI
 
 
@@ -53,5 +53,5 @@ def compute(python: str | None = None) -> dict[str, int]:
 SOURCES = {
     "tests": "cd backend && python -m pytest --collect-only -q",
     "mutaciones": "python qa/mutations_v07_p{1,2,25}.py qa/mutations_v08.py qa/mutations_v09.py qa/mutations_v10.py qa/mutations_v11.py --list | wc -l",
-    "e2e": "npx playwright test --list (e2e, e2e_pilot, e2e_public, e2e_first; sin la auditoría QA)",
+    "e2e": "npx playwright test --list (e2e, e2e_pilot, e2e_public, e2e_first, record; sin la auditoría QA)",
 }

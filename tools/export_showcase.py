@@ -17,10 +17,10 @@ DST = Path(__file__).resolve().parents[1]
 
 INCLUDE = (
     "backend/app/", "backend/tests/", "backend/pyproject.toml", "backend/requirements.txt",
-    "frontend/src/", "frontend/e2e/", "frontend/e2e_pilot/", "frontend/e2e_public/", "frontend/e2e_first/",
+    "frontend/src/", "frontend/e2e/", "frontend/e2e_pilot/", "frontend/e2e_public/", "frontend/e2e_first/", "frontend/record/",
     "frontend/package.json", "frontend/package-lock.json", "frontend/tsconfig.json", "frontend/vite.config.ts", "frontend/index.html",
     "frontend/postcss.config.js", "frontend/tailwind.config.js", "frontend/playwright",    # todas las configuraciones de Playwright (las pruebas de seguridad del repositorio leen la de auditoría)
-    "qa/", ".gitignore", "Containerfile", "compose.yaml", "start.sh", ".dockerignore", "site/", "deploy/hp/", "run_demo.sh", "run_demo_comercial.sh", "run_v05_lab.sh",    # los lanzadores los exigen las pruebas de seguridad del propio repositorio
+    "qa/", ".gitignore", "Containerfile", "compose.yaml", "start.sh", ".dockerignore", "site/", "deploy/hp/", "run_demo.sh", "run_demo_ia.sh", "run_demo_comercial.sh", "run_v05_lab.sh",    # los lanzadores los exigen las pruebas de seguridad del propio repositorio
     "docs/ARCHITECTURE.md", "docs/ROADMAP_V1_PRODUCTO.md", "docs/v05/", "docs/v06/", "docs/v07/", "docs/v08/", "docs/v09/", "docs/v10/", "docs/v11/", "docs/qa/planner-eval-", "docs/simple/", "docs/screenshots/",
     "docs/demo/REAL_VS_SIMULADO.md", "docs/demo/RUNBOOK_DEMO.md", "docs/demo/screenshots/",
 )

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { api, Me } from "../api";
 import { Chip, Empty, fmtDate, PageHeader, StatusChip } from "../ui";
 import { usePoll } from "./Dashboard";
@@ -17,6 +17,10 @@ const newId = () => "web-" + Math.random().toString(36).slice(2, 10) + Date.now(
 export default function Coordinator({ me, planId }: { me: Me; planId?: string }) {
   const [text, setText] = useState(""); const [busy, setBusy] = useState(false); const [err, setErr] = useState("");
   const [list, reloadList] = usePoll<any>("/plans", 3000);
+  const [dash] = usePoll<any>("/dashboard", 15000);              // solo para saber si el planificador es un modelo de IA (la respuesta puede tardar)
+  const llm = dash?.provider_mode === "llm";
+  const [secs, setSecs] = useState(0);
+  useEffect(() => { if (!busy) { setSecs(0); return; } const t0 = Date.now(); const t = setInterval(() => setSecs(Math.floor((Date.now() - t0) / 1000)), 500); return () => clearInterval(t); }, [busy]);
   const [plan, reloadPlan] = usePoll<any>(planId ? `/plans/${planId}` : "/plans/none", 2000);
   const go = (id: string) => { location.hash = `#/coordinator/${id}`; };
   const run = async (fn: () => Promise<any>) => { setBusy(true); setErr(""); try { return await fn(); } catch (e: any) { setErr(e.message); } finally { setBusy(false); reloadList(); reloadPlan(); } };
@@ -35,7 +39,9 @@ export default function Coordinator({ me, planId }: { me: Me; planId?: string })
             <form onSubmit={e => { e.preventDefault(); if (text.trim().length >= 5) propose(text); }}>
               <textarea className="input min-h-[110px]" maxLength={600} data-testid="plan-input" placeholder="Ej.: Pide a Javiera que confirme los materiales del mantenimiento de Marta…" value={text} onChange={e => setText(e.target.value)} />
               <div className="flex items-center justify-between mt-2"><span className="text-[11px] text-slate-400">{text.length}/600 · máx. 6 pasos por plan</span>
-                <button className="btn btn-primary" disabled={busy || text.trim().length < 5} data-testid="plan-submit">Proponer plan</button></div>
+                <button className="btn btn-primary" disabled={busy || text.trim().length < 5} data-testid="plan-submit">{busy && llm ? "Pensando…" : "Proponer plan"}</button></div>
+              {busy && llm && <div role="status" className="mt-2 rounded-lg bg-sky-50 border border-sky-200 px-3 py-2 text-sm text-sky-900" data-testid="plan-thinking">
+                <b>Pensando…</b> El modelo de IA ({dash.provider}) está proponiendo el plan y luego el motor lo valida. En un equipo sin GPU puede tardar. <span className="tabular-nums font-semibold" data-testid="plan-thinking-secs">{secs} s</span></div>}
             </form>
             <div className="mt-3 text-[11px] font-semibold text-slate-500">Ejemplos</div>
             <div className="flex flex-col gap-1.5 mt-1">{EXAMPLES.map((x, i) => <button key={i} onClick={() => setText(x)} data-testid={"example-" + i}

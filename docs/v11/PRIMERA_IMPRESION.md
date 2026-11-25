@@ -18,3 +18,18 @@ El motor, los permisos, las reglas de aprobación y los `data-testid` existentes
 - Las cifras de una demo pública son de **su** espacio, no de ningún cliente real: son datos ficticios.
 - El resaltado del recorrido es un borde sobre un elemento; si una pantalla cambia sus identificadores de prueba, hay que actualizarlo.
 - Un hallazgo del camino: la regla de estilo `.glass { position: relative }` anulaba la posición fija del recorrido desde el rediseño; ahora se fija en línea.
+
+## Demo local con IA gratis (`run_demo_ia.sh`)
+Para mostrar «IA de verdad» sin gastar: `./run_demo_ia.sh` arranca la demo local con el planificador del coordinador usando un modelo de **Ollama** (por defecto `qwen3.5:9b` en el propio Mac, ~4 s por plan). Comprueba antes que Ollama responde y que el modelo está instalado, y si no, dice qué hacer. Mientras el modelo responde, la pantalla del Coordinador muestra **«Pensando…»** con un contador de segundos (solo si el planificador es un modelo; con el motor de reglas es instantáneo). La IA **solo propone**: el plan sale rotulado «Propuesto por IA (modelo X) · validado por el motor», lo prohibido se bloquea igual y una persona aprueba.
+- La demo abre también con la decisión de ejemplo: el ejemplo lo arma siempre el motor determinista, aunque la instancia use un modelo, y el modelo se restaura después.
+- **Solo local.** La demo pública sigue negándose a arrancar con un modelo de IA.
+- **Medido en el HP** (2026-11-25, solo lectura, con el modelo que ya estaba cargado): 50 casos, 0 violaciones, 24 planes propuestos por la IA (15 de 16 válidos), mediana de 16 s y máximo de 18,5 s por plan, solo CPU. Un equipo sin GPU sirve para mostrarlo, no para una demo con prisa; por eso el plazo por plan es de 90 s (`AICOS_LLM_PLAN_TIMEOUT`) y existe el indicador.
+- Para usar el Ollama del HP desde el Mac: túnel SSH y `AICOS_OLLAMA_URL=http://127.0.0.1:18434 AICOS_OLLAMA_MODEL=qwen3:4b-instruct-hermes ./run_demo_ia.sh`.
+
+## Kit de grabación (`qa/grabar_demo.sh`)
+Para grabar un video o sacar GIFs de cómo funciona **de verdad**, sin grabar la pantalla a mano: `qa/grabar_demo.sh` recorre la demo real (la misma app y el mismo servidor, en su propio puerto y base) con un cursor visible y rótulos en español, y deja en `./grabaciones/` (ignorada por Git): `demo-completo.mp4`, una **escena por archivo** (`escena-NN-nombre.mp4` y `.gif`, de 0,1 a 1 MB cada una) y `capturas/*.png`.
+- **Escenas:** entrada con cuentas ficticias → la dueña abre y ya hay una decisión → aprueba una persona (la cifra de resultados sube) → trazabilidad en el visualizador → orden prohibida bloqueada → un plan real → cierre («datos ficticios · aprobación humana siempre»).
+- `qa/grabar_demo.sh` usa el motor de reglas. **`qa/grabar_demo.sh --ia`** usa IA local gratis (Ollama; `AICOS_OLLAMA_URL` / `AICOS_OLLAMA_MODEL`): la escena del plan muestra «Pensando…» y luego «Propuesto por IA · validado por el motor».
+- **Sin descargas:** el video no usa el ffmpeg descargable de Playwright; la prueba captura los cuadros por el protocolo del navegador y el script los une con el `ffmpeg` del sistema (y `gifsicle`, si está, para achicar los GIF).
+- **Sin riesgo de que el guion se pudra:** la misma prueba corre rápida y sin video en el CI (`playwright.record.config.ts`), así que si la interfaz cambia y el recorrido deja de funcionar, el CI falla.
+- Nada se sube ni se publica desde aquí: los archivos quedan en tu carpeta para que los revises antes de usarlos.
