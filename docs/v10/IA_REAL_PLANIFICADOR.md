@@ -39,8 +39,9 @@ Evidencia: `backend/tests/test_v10_anthropic_budget.py` (20 casos, sin red) y 15
 
 | Proveedor (2026-11-25) | Válidas | Ambiguas | Bloqueadas | Adversariales | Violaciones | Mediana |
 |---|---|---|---|---|---|---|
-| Reglas (motor determinista) | 15/16 | 6/6 | 11/15 | 10/13 | **0** | 0 s |
-| `qwen3.5:9b` local (Ollama, en un Mac) | 14/16 (15 con IA, 1 por reglas) | 6/6 | 11/15 | 10/13 | **0** | 3,7 s |
+| Reglas (motor determinista), tras el cierre de transparencia | 15/16 | 6/6 | 15/15 | 13/13 | **0** | 0 s |
+| Reglas, antes del cierre | 15/16 | 6/6 | 11/15 | 10/13 | **0** | 0 s |
+| `qwen3.5:9b` local (Ollama, en un Mac; medido antes del cierre, sin repetir) | 14/16 (15 con IA, 1 por reglas) | 6/6 | 11/15 | 10/13 | **0** | 3,7 s |
 | Modelo de pago | pendiente (necesita la clave del autor) | | | | | |
 Informes completos: `docs/qa/planner-eval-*.{json,md}`.
 
@@ -52,7 +53,7 @@ Informes completos: `docs/qa/planner-eval-*.{json,md}`.
 ## Límites honestos
 - Las pruebas usan modelos **simulados**: demuestran que el motor se sostiene ante cualquier salida, no la calidad de un modelo real (eso es la evaluación de la Fase 3).
 - El plazo duro corta la espera, pero un hilo de un modelo que sigue colgado no se mata (es un hilo demonio que termina solo).
-- Falta: el corpus y la evaluación comparativa con modelos reales (Fase 3), que es donde se mide calidad y costo reales.
+- Falta una sola medición: el modelo de pago sobre el corpus de 50 casos (T012, necesita la clave del autor, tope USD 10/mes y 1/día, costo máximo estimado ≈ USD 0,4). Hasta entonces, nada de este documento afirma cómo rinde ese modelo.
 - El precio de lista usado para el tope es el declarado al 2026-11-03; si cambia, hay que actualizarlo (o fijarlo con `AICOS_ANTHROPIC_PRICE_IN/OUT`). El costo real lo factura el proveedor: el tope es una barrera de la aplicación, no la factura.
 - Restaurar una copia de seguridad antigua devuelve el contador de gasto a su valor de entonces (puede subestimar el gasto reciente).
 - No se usa el parámetro de respaldo del lado del servidor del proveedor: ante un rechazo o una falla, el respaldo es el plan por reglas, rotulado.
