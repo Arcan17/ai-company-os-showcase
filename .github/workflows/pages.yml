@@ -1,5 +1,5 @@
-# Publicación del sitio de portafolio en GitHub Pages. SOLO manual (workflow_dispatch) y SOLO tras habilitar Pages en la configuración del repositorio (Settings → Pages → Source: GitHub Actions):
-# publicar es una decisión del autor, no algo que ocurra con cada cambio.
+# Publicación del sitio de portafolio en GitHub Pages. SOLO manual (workflow_dispatch): publicar es una decisión del autor, no algo que ocurra con cada cambio.
+# Requiere Pages habilitado con fuente «GitHub Actions» (Settings → Pages). Dos trabajos (construir y desplegar), como en la plantilla oficial de GitHub.
 name: Publicar sitio
 on:
   workflow_dispatch:
@@ -11,11 +11,8 @@ concurrency:
   group: pages
   cancel-in-progress: false
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
       - name: Comprobar saneamiento y cifras antes de publicar
@@ -28,5 +25,12 @@ jobs:
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
       - id: deployment
         uses: actions/deploy-pages@v4
