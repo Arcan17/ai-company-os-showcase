@@ -1,0 +1,13 @@
+# Apagado PROGRAMADO de la demo pública (decisión del autor, 2026-11-25: «dejarla corriendo un tiempo» = 30 días).
+# Se instala en ~/.config/systemd/user/ junto con aicos-demo-apagado.service. Para cambiar la fecha: edita OnCalendar y `systemctl --user daemon-reload`.
+[Unit]
+Description=Apagar la demo publica de AI Company OS (fecha programada)
+
+[Timer]
+OnCalendar=2026-12-25 12:00:00 UTC
+# Si el servidor estaba apagado a esa hora, se ejecuta al volver a arrancar.
+Persistent=true
+Unit=aicos-demo-apagado.service
+
+[Install]
+WantedBy=timers.target

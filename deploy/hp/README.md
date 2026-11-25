@@ -28,6 +28,14 @@ La medición de memoria con 20 visitantes (`qa/measure_public_demo.py`) se repit
 ## P4 — Exponer (opción A: solo tailnet) — cambia `tailscale serve`
 Si `tailscale serve` ya publica algo en la raíz `/`, la demo va en **otro puerto HTTPS** (p. ej. 8443); no se toca la configuración existente. Detrás de `serve` hay que declarar `AICOS_TRUSTED_PROXIES` o el límite por origen verá un solo origen. Funnel (público) NO se activa sin aprobación aparte.
 
+## Apagado programado (decidido: 30 días → 2026-12-25 12:00 UTC)
+```bash
+cp deploy/hp/aicos-demo-apagado.timer deploy/hp/aicos-demo-apagado.service ~/.config/systemd/user/
+systemctl --user daemon-reload && systemctl --user enable --now aicos-demo-apagado.timer
+systemctl --user list-timers aicos-demo-apagado.timer --no-pager      # debe mostrar la fecha
+```
+Al llegar la fecha detiene la demo y retira su unidad Quadlet (no reaparece al reiniciar); conserva el volumen y la imagen. Para **prolongarla**: cambia `OnCalendar` y `daemon-reload`. Para **cancelar el apagado**: `systemctl --user disable --now aicos-demo-apagado.timer`.
+
 ## Apagar / volver atrás
 ```bash
 systemctl --user stop aicos-demo.service

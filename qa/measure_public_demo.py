@@ -71,11 +71,41 @@ class Visitor:
         return "sin aprobación"
 
 
+def unit_mem_mb(host: str, unit: str, prop: str = "MemoryCurrent") -> float:
+    out = subprocess.run(["ssh", "-o", "BatchMode=yes", host, f"systemctl --user show {unit} -p {prop} --value"], capture_output=True, text=True, timeout=30).stdout.strip()
+    return int(out) / 1048576 if out.isdigit() else 0.0
+
+
+def measure_remote(a) -> int:
+    """Mide una demo ya levantada: lanza N visitantes por `--base` y lee la memoria de la unidad por SSH (antes, pico del cgroup y después). Respeta los límites reales de la instancia (tope y espacios nuevos por origen)."""
+    idle = unit_mem_mb(a.ssh_host, a.unit) if a.ssh_host else 0.0
+    vs = [Visitor(a.base.rstrip("/")) for _ in range(a.visitors)]
+    res = [None] * a.visitors
+    t0 = time.monotonic()
+    ths = [threading.Thread(target=lambda i=i: res.__setitem__(i, vs[i].run(i + 5000))) for i in range(a.visitors)]
+    [t.start() for t in ths]; [t.join() for t in ths]
+    total = time.monotonic() - t0
+    lat = sorted(x for v in vs for x in v.lat)
+    ok = sum(1 for r in res if r == "ok")
+    print(f"visitantes: {a.visitors} · flujo completo OK: {ok} · tiempo total {total:.1f} s · latencia (incluye el túnel): mediana {statistics.median(lat) * 1000:.0f} ms · p95 {lat[max(0, int(len(lat) * .95) - 1)] * 1000:.0f} ms")
+    if a.ssh_host:
+        after, peak = unit_mem_mb(a.ssh_host, a.unit), unit_mem_mb(a.ssh_host, a.unit, "MemoryPeak")
+        print(f"memoria de la unidad (cgroup): antes {idle:.0f} MB · después {after:.0f} MB · pico desde el arranque {peak:.0f} MB · por visitante ≈ {(after - idle) / max(a.visitors, 1):.1f} MB")
+    if ok != a.visitors:
+        print("✖ fallos:", [r for r in res if r != "ok"]); return 1
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--visitors", type=int, default=20)
     ap.add_argument("--step-delay", default="0.12")
+    ap.add_argument("--base", default="", help="URL de una demo YA levantada (p. ej. por túnel SSH): no se arranca servidor propio")
+    ap.add_argument("--ssh-host", default="", help="con --base: host SSH donde corre la unidad, para leer su memoria (cgroup de systemd)")
+    ap.add_argument("--unit", default="aicos-demo.service", help="con --ssh-host: unidad systemd de usuario a medir")
     a = ap.parse_args()
+    if a.base:
+        return measure_remote(a)
     py = ROOT / "backend" / ".venv" / "bin" / "python"
     port = free_port()
     with tempfile.TemporaryDirectory(prefix="aicos-measure-") as tmp:
