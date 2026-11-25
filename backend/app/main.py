@@ -1,6 +1,7 @@
 import sys
 
 from .pilot import EX_CONFIG, PilotConfigError
+from .providers.base import ProviderConfigError
 from .public_demo import PublicDemoConfigError
 
 try:
@@ -11,6 +12,6 @@ try:
     else:
         from .api import create_app
         app = create_app()
-except (PilotConfigError, PublicDemoConfigError) as e:                                      # configuración insegura del modo piloto: salida limpia (sin traza) y código ≠ 0, antes de abrir la base
+except (PilotConfigError, PublicDemoConfigError, ProviderConfigError) as e:                                      # configuración insegura del modo piloto: salida limpia (sin traza) y código ≠ 0, antes de abrir la base
     print(f"ERROR: {e}", file=sys.stderr)
     raise SystemExit(EX_CONFIG)

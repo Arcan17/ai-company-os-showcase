@@ -62,6 +62,12 @@ Index("ix_login_attempts_ip", login_attempts.c.ip, login_attempts.c.at)
 # Both tables are runtime state, not data: a restore clears them (backup.RUNTIME_STATE). company_id is deliberately not a foreign key (a bucket may outlive a deleted tenant for ≤ one window).
 rate_limits = _t("rate_limits", Column("bucket", String, primary_key=True), Column("kind", String, nullable=False), Column("company_id", String), Column("tat", Float, nullable=False))
 Index("ix_rate_limits_tat", rate_limits.c.tat)
+# V0.10 (spec 005, fase 2): gasto en modelos de pago. UNA fila por llamada (o RESERVA mientras la llamada está en curso): el tope se comprueba contra la suma de reservas y gastos ANTES de llamar.
+# Sin company_id a propósito: el tope es de la INSTANCIA (lo paga el operador), no de una empresa. No guarda textos, solo cifras.
+llm_usage = _t("llm_usage", Column("id", Integer, primary_key=True, autoincrement=True), Column("ts", String, nullable=False), Column("day", String, nullable=False, index=True),
+               Column("month", String, nullable=False, index=True), Column("provider", String, nullable=False), Column("model", String, nullable=False),
+               Column("input_tokens", Integer, nullable=False, default=0), Column("output_tokens", Integer, nullable=False, default=0),
+               Column("cost_usd", Float, nullable=False), Column("status", String, nullable=False))   # status: reserved | ok | error | refusal
 rate_limit_meta = _t("rate_limit_meta", Column("name", String, primary_key=True), Column("value", String, nullable=False))
 # V0.7 P2 (Issue #23): identidad externa. `identities` dice A QUIÉN corresponde (provider, subject): los inicios de sesión posteriores usan el subject, NUNCA el correo. El rol y la empresa salen de `users`.
 identities = _t("identities", Column("provider", String, primary_key=True), Column("subject", String, primary_key=True), Column("user_id", String, ForeignKey("users.id"), nullable=False), CID(),

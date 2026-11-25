@@ -46,7 +46,7 @@ ACTION_LABEL = {"review_pending": "Revisar solicitudes abiertas", "review_reques
 
 
 # Por qué un plan salió «por reglas» aunque había un modelo configurado (se muestra en la interfaz y queda en el evento del plan).
-FALLBACK_LABEL = {"error": "la IA no respondió o falló", "lentitud": "la IA tardó demasiado", "invalida": "la IA devolvió una propuesta inválida",
+FALLBACK_LABEL = {"presupuesto": "se alcanzó el tope de gasto de la IA", "error": "la IA no respondió o falló", "lentitud": "la IA tardó demasiado", "invalida": "la IA devolvió una propuesta inválida",
                   "sin_tareas": "la propuesta de la IA no tenía tareas soportadas"}
 
 
@@ -290,7 +290,8 @@ class PlanEngine:
             return None, "error", out["e"]
         raw = out.get("v")
         if raw is None:
-            return None, "error", str(getattr(prov, "last_error", None) or "sin respuesta")[:200]
+            code = "presupuesto" if getattr(prov, "last_code", None) == "presupuesto" else "error"
+            return None, code, str(getattr(prov, "last_error", None) or "sin respuesta")[:200]
         if not _well_formed(raw):
             return None, "invalida", "la respuesta no tiene la forma esperada"
         return raw, None, ""

@@ -20,7 +20,9 @@ PY = ROOT / "backend" / ".venv" / "bin" / "python"
 HOST = "tests/test_v10_planner_hostile.py"
 PLANS = "tests/test_plans.py"
 PD = "tests/test_v09_public_demo.py"
+AB = "tests/test_v10_anthropic_budget.py"
 PL, BASE, PUB = "backend/app/engine/planner.py", "backend/app/providers/base.py", "backend/app/public_demo.py"
+BUD, ANT = "backend/app/providers/budget.py", "backend/app/providers/anthropic_provider.py"
 
 # id, qué se rompe, archivo (relativo a la raíz del repo), texto exacto (o lista de pares), reemplazo, pruebas (archivos) que DEBEN fallar
 M = [
@@ -36,6 +38,22 @@ M = [
     ("W08", "el nombre de un cliente llega al modelo sin sanear (símbolos y saltos de línea)", BASE, '    t = _LABEL_KEEP.sub(" ", str(value or ""))', '    t = str(value or "")', [HOST]),
     ("W09", "el nombre de un cliente llega al modelo sin límite de longitud", BASE, '    return " ".join(t.split())[:limit]', '    return " ".join(t.split())', [HOST]),
     ("W10", "la demo pública arranca con un modelo de IA", PUB, '        if settings.llm_provider != "deterministic":', "        if False:", [PD]),
+    # ── fase 2: control de gasto y adaptador de pago ──
+    ("X01", "se llama a la API aunque no haya cupo de gasto", ANT, "        if rid is None:                              # NO se llama: el tope de gasto no alcanza para el peor caso de esta llamada", "        if False:", [AB]),
+    ("X02", "el tope DIARIO no se verifica", BUD, "(SELECT COALESCE(SUM(cost_usd),0) FROM llm_usage WHERE day=:d)+:w <= :dc", "1=1", [AB]),
+    ("X03", "el tope MENSUAL no se verifica", BUD, "(SELECT COALESCE(SUM(cost_usd),0) FROM llm_usage WHERE month=:m)+:w <= :mc", "1=1", [AB]),
+    ("X04", "las reservas de llamadas en curso no cuentan para el tope (dos llamadas simultáneas pasan el límite)", BUD, "FROM llm_usage WHERE day=:d)+:w <= :dc", "FROM llm_usage WHERE day=:d AND status!='reserved')+:w <= :dc", [AB]),
+    ("X05", "al terminar no se cambia la reserva por el costo real", BUD, "SET input_tokens=:i,output_tokens=:o,cost_usd=:c,status=:s", "SET input_tokens=:i,output_tokens=:o,cost_usd=cost_usd,status=:s", [AB]),
+    ("X06", "el peor caso ignora la salida (el tope se calcula de menos)", BUD, "+ max_tokens * self.pout / 1e6", "+ 0", [AB]),
+    ("X07", "una llamada fallida no libera su reserva", ANT, "            cost = self.budget.settle(rid, tin, tout, status)", "            cost = 0.0", [AB]),
+    ("X08", "la clave aparece en el repr del proveedor", ANT, "        self._key_mask = mask_key(api_key)", "        self._key_mask = api_key", [AB]),
+    ("X09", "se envía temperatura (parámetro que estos modelos rechazan)", ANT, "max_tokens=self.max_tokens, system=SYSTEM,", "max_tokens=self.max_tokens, temperature=0, system=SYSTEM,", [AB]),
+    ("X10", "el modelo recibe las solicitudes completas (con descripción)", ANT, "{[(r['id'], r.get('customer'), r.get('category')) for r in open_requests]}", "{open_requests}", [AB]),
+    ("X11", "un rechazo del modelo se acepta como propuesta válida", ANT, '            if resp.stop_reason == "refusal":', "            if False:", [AB]),
+    ("X12", "se activa el modelo de pago sin clave", ANT, "        if not api_key and client is None:", "        if False:", [AB]),
+    ("X13", "un modelo sin precio conocido arranca de todos modos", BUD, '    raise ProviderConfigError(f"No se conoce el precio del modelo «{model}»: define', "    return (1.0, 1.0)  # define", [AB]),
+    ("X14", "los topes de gasto inválidos se aceptan", BUD, "        if day_usd <= 0 or month_usd <= 0 or day_usd > month_usd:", "        if False:", [AB]),
+    ("X15", "el tope de gasto alcanzado se rotula como un error cualquiera", PL, 'code = "presupuesto" if getattr(prov, "last_code", None) == "presupuesto" else "error"', 'code = "error"', [AB]),
 ]
 M = [(i, w, f, o, n if n is not None else "", t) for i, w, f, o, n, t in M]
 

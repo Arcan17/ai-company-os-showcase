@@ -15,6 +15,13 @@ class Settings:
     step_delay: float = float(os.environ.get("AICOS_STEP_DELAY", "0.55"))  # pacing so the graph is watchable
     sync_runs: bool = os.environ.get("AICOS_SYNC", "0") == "1"  # tests: run engine inline
     llm_provider: str = os.environ.get("AICOS_LLM_PROVIDER", "deterministic")  # deterministic | ollama
+    # V0.10 (spec 005, fase 2) — IA de pago (API de Anthropic). La CLAVE solo se lee del entorno (AICOS_ANTHROPIC_API_KEY, deliberadamente NO la variable estándar para no gastar por accidente con la de otra herramienta).
+    anthropic_api_key: str = os.environ.get("AICOS_ANTHROPIC_API_KEY", "")
+    anthropic_model: str = os.environ.get("AICOS_ANTHROPIC_MODEL", "claude-opus-5-5")
+    anthropic_price_in: str = os.environ.get("AICOS_ANTHROPIC_PRICE_IN", "")     # USD por millón de tokens de ENTRADA; vacío = tabla conocida del modelo; modelo desconocido sin precio = se niega a arrancar
+    anthropic_price_out: str = os.environ.get("AICOS_ANTHROPIC_PRICE_OUT", "")   # USD por millón de tokens de SALIDA
+    llm_budget_day_usd: float = float(os.environ.get("AICOS_LLM_BUDGET_DAY_USD", "1"))      # tope DURO por día (UTC)
+    llm_budget_month_usd: float = float(os.environ.get("AICOS_LLM_BUDGET_MONTH_USD", "10"))  # tope DURO por mes (UTC)
     llm_plan_timeout: float = float(os.environ.get("AICOS_LLM_PLAN_TIMEOUT", "60"))   # plazo duro (s) para que un modelo proponga un plan: pasado el plazo, se usan las reglas (rotulado)
     ollama_url: str = os.environ.get("AICOS_OLLAMA_URL", "http://127.0.0.1:11434")
     ollama_model: str = os.environ.get("AICOS_OLLAMA_MODEL", "qwen3.5:4b-q4_K_M")

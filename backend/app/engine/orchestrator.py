@@ -53,7 +53,7 @@ class ChatInput:
 class Orchestrator:
     def __init__(self, eng: Engine):
         self.eng = eng
-        self.provider = get_provider()
+        self.provider = get_provider(eng)
         self.plans = None  # PlanEngine (V0.4), attached by create_app
         self.keeper = None  # lease.LeaseKeeper (V0.6), attached by create_app; None = no lease logic (single-process tests)
 

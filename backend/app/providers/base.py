@@ -40,6 +40,10 @@ class Provider(ABC):
         return None
 
 
+class ProviderConfigError(RuntimeError):
+    """Configuración inválida o insegura de un proveedor de IA: el servidor se niega a arrancar (salida limpia, sin traza)."""
+
+
 _LABEL_KEEP = re.compile(r"[^\w .,'\-áéíóúüñÁÉÍÓÚÜÑ]", re.UNICODE)
 
 
