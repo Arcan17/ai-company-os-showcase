@@ -7,7 +7,7 @@ Esta carpeta solo contiene la unidad y los pasos para un servidor con Podman roo
 # desde tu computador (solo los archivos que Git rastrea; sin historial ni secretos)
 git archive HEAD | ssh hp-homelab 'mkdir -p ~/aicos-demo-src && tar -x -C ~/aicos-demo-src'
 # en el HP, como el usuario normal (sin sudo)
-cd ~/aicos-demo-src && podman build -f Containerfile -t localhost/aicos-demo:v09 .
+cd ~/aicos-demo-src && podman build -f Containerfile -t localhost/aicos-demo:v11 .
 ```
 ## P2 — Instalar la unidad y arrancar (escribe en el HP)
 ```bash
@@ -42,4 +42,4 @@ systemctl --user stop aicos-demo.service
 rm ~/.config/containers/systemd/aicos-demo.container && systemctl --user daemon-reload
 podman volume rm aicos-demo-data        # borra los datos (ficticios) de la demo
 ```
-La imagen anterior se conserva con su etiqueta; para volver a una versión previa basta reetiquetarla como `v09` y reiniciar el servicio.
+La imagen anterior se conserva con su etiqueta; para volver a una versión previa basta reetiquetarla como `v11` (o la etiqueta vigente) y reiniciar el servicio.

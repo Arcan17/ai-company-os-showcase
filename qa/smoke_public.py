@@ -46,14 +46,22 @@ a.login(); b.login()
 names = {c.name for c in a.jar} & {c.name for c in b.jar}
 ok("aicos_visitor" in names, "cada visitante recibe su cookie de espacio")
 ok({c.value for c in a.jar if c.name == "aicos_visitor"} != {c.value for c in b.jar if c.name == "aicos_visitor"}, "las cookies de espacio son distintas")
+def pending_ids(v):
+    s, d = v.call("GET", "/api/dashboard")
+    return {x["id"] for x in d["pending_approvals"]} if s == 200 else set()
+
+
+# Con AICOS_DEMO_EXAMPLE=1 cada visitante ya abre con una decisión de ejemplo (la MISMA en cada copia de la plantilla): se compara contra esa línea base, no contra «vacío».
+base_a, base_b = pending_ids(a), pending_ids(b)
+ok(len(base_a) == len(base_b) and len(base_a) <= 1, f"cada visitante abre con la misma base ({len(base_a)} decisión de ejemplo o ninguna)")
 s, _ = a.call("POST", "/api/public/clima-sur/chat", {"message": "Hola, mi aire acondicionado split del living no enfría desde ayer, creo que le falta gas.", "name": "Marta Rojas", "client_msg_id": "smoke-pub-1"})
 ok(s == 200, "el visitante A escribe como cliente")
-pend = []
+nuevas = set()
 for _ in range(40):
-    s, d = a.call("GET", "/api/dashboard"); pend = d["pending_approvals"] if s == 200 else []
-    if pend:
+    nuevas = pending_ids(a) - base_a
+    if nuevas:
         break
     time.sleep(1)
-ok(len(pend) == 1, "A ve su aprobación pendiente")
-s, d = b.call("GET", "/api/dashboard"); ok(s == 200 and d["pending_approvals"] == [], "B NO ve nada de lo de A (espacios aislados)")
+ok(len(nuevas) == 1, "A ve su aprobación pendiente NUEVA (además de la de ejemplo, si la hay)")
+ok(pending_ids(b) == base_b and not (nuevas & pending_ids(b)), "B NO ve nada de lo de A (espacios aislados)")
 print("OK: demo pública aislada por visitante")

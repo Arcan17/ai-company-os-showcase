@@ -8,8 +8,8 @@ Wants=network-online.target
 After=network-online.target
 
 [Container]
-# Etiqueta explícita (nunca :latest); se construye en el HP: podman build -f Containerfile -t localhost/aicos-demo:v09 .
-Image=localhost/aicos-demo:v09
+# Etiqueta explícita (nunca :latest); se construye en el HP: podman build -f Containerfile -t localhost/aicos-demo:v11 .
+Image=localhost/aicos-demo:v11
 ContainerName=aicos-demo
 # SOLO loopback del HP: la exposición es una capa aparte (túnel SSH o `tailscale serve` en OTRO puerto), con aprobación.
 PublishPort=127.0.0.1:8731:8731
