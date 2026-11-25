@@ -31,7 +31,7 @@ El chat público usaba el id del mensaje como clave de idempotencia: quien conoc
 ## Métricas (todas con su comando)
 | Métrica | Valor | Fuente |
 |---|---|---|
-| Pruebas automáticas | 800 | `pytest --collect-only -q` |
+| Pruebas automáticas | 806 | `pytest --collect-only -q` |
 | Mutaciones de seguridad | 146 (29 + 45 + 39 + 21 + 12) | `python qa/mutations_v07_p{1,2,25}.py qa/mutations_v08.py qa/mutations_v09.py --list \| wc -l` |
 | Consultas sin justificar en la guarda de aislamiento | 0 | `python qa/audit_identity_tenancy.py --check` |
 | Pruebas de navegador real | 18 + 4 + 2 + 2 | `frontend/e2e*`, `npx playwright test` |

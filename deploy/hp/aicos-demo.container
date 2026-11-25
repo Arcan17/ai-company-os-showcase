@@ -1,0 +1,41 @@
+# Unidad Quadlet (usuario, rootless) para la DEMO PÚBLICA de AI Company OS en el HP. DATOS 100 % FICTICIOS.
+# NO está instalada ni desplegada: se instala copiándola a ~/.config/containers/systemd/ (ver README.md de esta carpeta) y solo con la aprobación de quien opera el servidor.
+# Podman 4.9 / systemd 255. El aislamiento lo da el CONTENEDOR (rootless, solo lectura, sin capacidades), no las opciones de sandbox de systemd de usuario, que pueden no aplicarse en todos los sistemas.
+
+[Unit]
+Description=AI Company OS - demo publica (datos ficticios)
+Wants=network-online.target
+After=network-online.target
+
+[Container]
+# Etiqueta explícita (nunca :latest); se construye en el HP: podman build -f Containerfile -t localhost/aicos-demo:v09 .
+Image=localhost/aicos-demo:v09
+ContainerName=aicos-demo
+# SOLO loopback del HP: la exposición es una capa aparte (túnel SSH o `tailscale serve` en OTRO puerto), con aprobación.
+PublishPort=127.0.0.1:8731:8731
+Volume=aicos-demo-data:/data
+Environment=AICOS_PUBLIC_DEMO=1
+Environment=AICOS_PUBLIC_DEMO_DIR=/data/public-demo
+Environment=AICOS_PUBLIC_MAX_VISITORS=10
+Environment=AICOS_PUBLIC_IDLE_SECONDS=1200
+Environment=AICOS_PUBLIC_NEW_PER_SOURCE=6
+Environment=AICOS_STEP_DELAY=0.55
+Environment=AICOS_ALLOW_COMPANY_CREATION=0
+ReadOnly=true
+Tmpfs=/tmp
+DropCapability=ALL
+NoNewPrivileges=true
+# Límites: memoria (sin swap), procesos y CPU. La medición indica ≈160 MB con 20 visitantes; 512 MB deja más de 3× de margen.
+PodmanArgs=--pids-limit=256 --memory=512m --memory-swap=512m --cpus=1.5
+HealthCmd=python -c "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8731/api/health', timeout=2).status == 200 else 1)"
+HealthInterval=30s
+HealthRetries=3
+HealthStartPeriod=20s
+
+[Service]
+Restart=on-failure
+RestartSec=10
+TimeoutStartSec=180
+
+[Install]
+WantedBy=default.target
