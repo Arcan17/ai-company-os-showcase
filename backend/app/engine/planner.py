@@ -99,6 +99,34 @@ def scan_forbidden(text: str) -> list[dict]:
     return out
 
 
+# ---- transparency: tell the owner which parts of the instruction the plan did NOT cover (structural, not a word list) ----
+CLAUSE_SPLIT = re.compile(r"[.;!?\n]+|\s*,\s*(?:y|e|pero|luego|despu[eé]s|and|then)\s+|\s+(?:y|e|luego|despu[eé]s|and|then)\s+", re.I)
+CONTEXT_RE = re.compile(r"(por favor|gracias|muchas gracias|confio en ti|por cierto)[ ,]*")
+
+
+def unmapped_clauses(text: str, prop, staff: list[dict], customers: list[dict], excluded: list[dict]) -> list[str]:
+    """Clauses of the owner's text that map to NO step of the plan and to no excluded label. The closed catalog already guarantees they are not executed;
+    this makes the plan SAY so instead of staying silent. A clause is covered if it carries a signal of a capability the plan really uses (or is a
+    forbidden action already labelled, or only names a customer / employee / request). Informational only: it never changes steps or status."""
+    out: list[str] = []
+    for raw in CLAUSE_SPLIT.split(text):
+        clause = (raw or "").strip(" ,:-\"'«»")
+        if len(clause.split()) < 2:
+            continue
+        t = norm(clause)
+        if any(re.search(rx, t) for _c, rx, _l in FORBIDDEN) or INJECTION.search(t):
+            continue                                        # already reported by label (excluded) or blocked as a whole
+        covered = ((prop.admin_verify_materials and MATERIAL_RE.search(t) and (ADMIN_RE.search(t) or "admin" in _named_roles(t, staff)))     # the same two-part test that created the step,
+                   or (prop.technician_confirm and (TECH_RE.search(t) or "technician" in _named_roles(t, staff)) and TECH_CONFIRM_RE.search(t))                         # applied to THIS clause: an object word alone
+                   or (prop.review_pending and REVIEW_RE.search(t) and REVIEW_OBJ_RE.search(t))                             # («visita») does not make an order covered
+                   or (prop.admin_verify_materials and prop.technician_confirm and TECH_CONFIRM_RE.search(t) and (MATERIAL_RE.search(t) or TECH_RE.search(t) or _named_roles(t, staff)))
+                   or (prop.notify_owner and NOTIFY_RE.search(t))
+                   or CONTEXT_RE.fullmatch(t))
+        if not covered and clause[:120] not in out:
+            out.append(clause[:120])
+    return out[:5]
+
+
 def _first_names(staff: list[dict]) -> dict[str, list[dict]]:
     """first name → ALL employees sharing it (two «Javier» must never collapse into one)."""
     d: dict[str, list[dict]] = {}
@@ -266,6 +294,7 @@ class PlanEngine:
         draft = self._resolve(prop, text, ctx, overrides)
         draft["notes"] = notes + draft.get("notes", [])
         draft["fallback"] = fallback
+        draft["ignored"] = unmapped_clauses(text, prop, everyone, ctx["customers"], draft["excluded"])
         self._persist(cid, pid, draft, source, overrides)
         self._ev(cid, pid, "agent.completed", "Coordinador: plan " + {"awaiting_user_confirmation": "listo para tu confirmación", "needs_clarification": "necesita una aclaración", "blocked": "BLOQUEADO (no se ejecuta nada)"}[draft["status"]], {"status": draft["status"]})
         if draft["status"] == "awaiting_user_confirmation" and draft["intent"] == "review_pending":
@@ -448,7 +477,7 @@ class PlanEngine:
                   i=uid("stp_"), c=cid, p=pid, sq=s["seq"], a=s["action"], ag=s["agent"], u=s["assignee_user_id"], ar=jdump(s["args"]), d=s["depends_on"], ac=s["access"], pe=s["permission"],
                   o=source if source.startswith("llm") else "deterministic", ti=s["title"], t=t)
             q(c, "UPDATE plans SET status=:s,source=:so,intent=:in,request_id=:r,summary=:su,proposal=:pr,excluded=:ex,clarification=:cl,status_reason=:re,updated_at=:t WHERE id=:i AND company_id=:c",
-              s=d["status"], so=source, **{"in": d["intent"]}, r=d["request_id"], su=d.get("summary"), pr=jdump({"overrides": overrides, "notes": d["notes"], "fallback": d.get("fallback")}), ex=jdump(d["excluded"]),
+              s=d["status"], so=source, **{"in": d["intent"]}, r=d["request_id"], su=d.get("summary"), pr=jdump({"overrides": overrides, "notes": d["notes"], "fallback": d.get("fallback"), "ignored": d.get("ignored", [])}), ex=jdump(d["excluded"]),
               cl=jdump(d["clarification"]) if d["clarification"] else None, re=d["reason"], t=t, i=pid, c=cid)
         ttl = {"awaiting_user_confirmation": "Plan validado (aún no ejecuta nada): espera tu confirmación", "needs_clarification": "Plan en pausa: " + (d["reason"] or ""), "blocked": "Plan bloqueado: " + (d["reason"] or "")}[d["status"]]
         self._ev(cid, pid, {"awaiting_user_confirmation": "plan.validated", "needs_clarification": "plan.needs_clarification", "blocked": "plan.blocked"}[d["status"]], ttl,
@@ -635,7 +664,7 @@ class PlanEngine:
         meta = jload(p["proposal"], {})
         return {"id": p["id"], "text": p["text"], "status": p["status"], "source": p["source"], "intent": p["intent"], "request_id": p["request_id"], "summary": p["summary"],
                 "status_reason": p["status_reason"], "result_summary": p["result_summary"], "excluded": jload(p["excluded"], []), "clarification": jload(p["clarification"], None),
-                "notes": meta.get("notes", []), "fallback": meta.get("fallback"), "fallback_label": FALLBACK_LABEL.get(meta.get("fallback") or ""), "rounds": p["rounds"], "max_rounds": MAX_ROUNDS, "created_by": by["name"] if by else None, "created_by_id": p["created_by"],
+                "notes": meta.get("notes", []), "fallback": meta.get("fallback"), "ignored": meta.get("ignored", []), "fallback_label": FALLBACK_LABEL.get(meta.get("fallback") or ""), "rounds": p["rounds"], "max_rounds": MAX_ROUNDS, "created_by": by["name"] if by else None, "created_by_id": p["created_by"],
                 "confirmed_at": p["confirmed_at"], "created_at": p["created_at"], "steps": steps}
 
 

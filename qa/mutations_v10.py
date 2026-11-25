@@ -22,6 +22,7 @@ PLANS = "tests/test_plans.py"
 PD = "tests/test_v09_public_demo.py"
 AB = "tests/test_v10_anthropic_budget.py"
 EVT, EV = "tests/test_v10_eval_planner.py", "qa/eval_planner.py"
+TR = "tests/test_v10_transparency.py"
 PL, BASE, PUB = "backend/app/engine/planner.py", "backend/app/providers/base.py", "backend/app/public_demo.py"
 BUD, ANT = "backend/app/providers/budget.py", "backend/app/providers/anthropic_provider.py"
 
@@ -34,7 +35,7 @@ M = [
       ("                except Exception as e:                                    # una propuesta que rompe al validador es una propuesta inválida, no un error del servidor", "                except ZeroDivisionError as e:")], None, [HOST]),
     ("W04", "se omite el validador del motor: la propuesta del modelo se usa tal cual", PL, 'prop, rej = validate_llm_proposal(raw, text, ctx["open_requests"], ctx["customers"], everyone)', "prop, rej = raw, []", [HOST, PLANS]),
     ("W05", "una propuesta sin tareas soportadas ya no cae a las reglas", PL, "                if prop is not None and not (prop.review_pending or prop.admin_verify_materials or prop.technician_confirm):", "                if False and not (prop.review_pending or prop.admin_verify_materials or prop.technician_confirm):", [HOST]),
-    ("W06", "el motivo del respaldo no se guarda en el plan", PL, 'pr=jdump({"overrides": overrides, "notes": d["notes"], "fallback": d.get("fallback")})', 'pr=jdump({"overrides": overrides, "notes": d["notes"], "fallback": None})', [HOST]),
+    ("W06", "el motivo del respaldo no se guarda en el plan", PL, 'pr=jdump({"overrides": overrides, "notes": d["notes"], "fallback": d.get("fallback"), "ignored": d.get("ignored", [])})', 'pr=jdump({"overrides": overrides, "notes": d["notes"], "fallback": None, "ignored": d.get("ignored", [])})', [HOST]),
     ("W07", "el modelo recibe las solicitudes completas (con descripción) y no solo lo mínimo", PL, "out[\"v\"] = prov.propose_plan(text, minimal_requests(open_requests))", "out[\"v\"] = prov.propose_plan(text, open_requests)", [HOST]),
     ("W08", "el nombre de un cliente llega al modelo sin sanear (símbolos y saltos de línea)", BASE, '    t = _LABEL_KEEP.sub(" ", str(value or ""))', '    t = str(value or "")', [HOST]),
     ("W09", "el nombre de un cliente llega al modelo sin límite de longitud", BASE, '    return " ".join(t.split())[:limit]', '    return " ".join(t.split())', [HOST]),
@@ -57,8 +58,13 @@ M = [
     ("Y01", "la evaluación no detecta un paso fuera del catálogo cerrado", EV, "    if fuera:", "    if False:", [EVT]),
     ("Y02", "la evaluación no detecta tareas o delegaciones creadas antes de confirmar", EV, "    if tareas1 > tareas0 or deleg1 > deleg0:", "    if False:", [EVT]),
     ("Y03", "la evaluación acepta cualquier plan en ejecución sin confirmación (no solo los de solo lectura)", EV, "and not (acciones and set(acciones) <= SOLO_LECTURA):", "and False:", [EVT]),
-    ("Y04", "un bloqueo esperado ausente no se informa como hueco", EV, "    if faltan:", "    if False:", [EVT]),
+    ("Y04", "un bloqueo esperado ausente no se informa como hueco", EV, '    if faltan and not pl.get("ignored"):', "    if False:", [EVT]),
     ("X15", "el tope de gasto alcanzado se rotula como un error cualquiera", PL, 'code = "presupuesto" if getattr(prov, "last_code", None) == "presupuesto" else "error"', 'code = "error"', [AB]),
+    # ── cierre de transparencia: el plan avisa de lo que de la instrucción NO cubre ──
+    ("Z01", "las partes ignoradas no se guardan en el plan", PL, '"ignored": d.get("ignored", [])}', '"ignored": []}', [TR]),
+    ("Z02", "la vista del plan no expone las partes ignoradas", PL, '"ignored": meta.get("ignored", []), "fallback_label"', '"ignored": [], "fallback_label"', [TR]),
+    ("Z03", "una parte de la instrucción sin paso ni etiqueta no se avisa", PL, "        if not covered and clause[:120] not in out:", "        if False:", [TR]),
+    ("Z04", "una parte que SÍ tiene paso se avisa como ignorada (falso aviso)", PL, "        covered = ((prop.admin_verify_materials", "        covered = (False and (prop.admin_verify_materials", [TR]),
 ]
 M = [(i, w, f, o, n if n is not None else "", t) for i, w, f, o, n, t in M]
 

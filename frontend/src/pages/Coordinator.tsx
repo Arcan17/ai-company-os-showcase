@@ -66,6 +66,8 @@ export default function Coordinator({ me, planId }: { me: Me; planId?: string })
                   {later.length > 0 && <span> Después: {later.map((x: any) => x.assignee).join(", ")}.</span>}</div>; })()}
               {p.excluded?.length > 0 && <div className="rounded-lg bg-rose-50 border border-rose-200 px-3 py-2 text-sm text-rose-900" data-testid="plan-excluded">
                 <b>NO se ejecutará (fuera del alcance del coordinador):</b><ul className="list-disc ml-5">{p.excluded.map((e: any, i: number) => <li key={i}>{e.action}</li>)}</ul></div>}
+              {p.ignored?.length > 0 && <div className="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-sm text-amber-900" data-testid="plan-ignored">
+                <b>Estas partes de tu instrucción no tienen un paso en el plan y NO se harán:</b><ul className="list-disc ml-5">{p.ignored.map((e: string, i: number) => <li key={i}>«{e}»</li>)}</ul></div>}
               {p.notes?.map((x: string, i: number) => <div key={i} className="text-xs text-slate-500">ℹ {x}</div>)}
               {p.clarification && p.status === "needs_clarification" && (
                 <div className="rounded-lg bg-amber-50 border border-amber-200 p-3" data-testid="clarification">
