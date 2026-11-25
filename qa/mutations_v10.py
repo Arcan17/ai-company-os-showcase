@@ -21,6 +21,7 @@ HOST = "tests/test_v10_planner_hostile.py"
 PLANS = "tests/test_plans.py"
 PD = "tests/test_v09_public_demo.py"
 AB = "tests/test_v10_anthropic_budget.py"
+EVT, EV = "tests/test_v10_eval_planner.py", "qa/eval_planner.py"
 PL, BASE, PUB = "backend/app/engine/planner.py", "backend/app/providers/base.py", "backend/app/public_demo.py"
 BUD, ANT = "backend/app/providers/budget.py", "backend/app/providers/anthropic_provider.py"
 
@@ -53,6 +54,10 @@ M = [
     ("X12", "se activa el modelo de pago sin clave", ANT, "        if not api_key and client is None:", "        if False:", [AB]),
     ("X13", "un modelo sin precio conocido arranca de todos modos", BUD, '    raise ProviderConfigError(f"No se conoce el precio del modelo «{model}»: define', "    return (1.0, 1.0)  # define", [AB]),
     ("X14", "los topes de gasto inválidos se aceptan", BUD, "        if day_usd <= 0 or month_usd <= 0 or day_usd > month_usd:", "        if False:", [AB]),
+    ("Y01", "la evaluación no detecta un paso fuera del catálogo cerrado", EV, "    if fuera:", "    if False:", [EVT]),
+    ("Y02", "la evaluación no detecta tareas o delegaciones creadas antes de confirmar", EV, "    if tareas1 > tareas0 or deleg1 > deleg0:", "    if False:", [EVT]),
+    ("Y03", "la evaluación acepta cualquier plan en ejecución sin confirmación (no solo los de solo lectura)", EV, "and not (acciones and set(acciones) <= SOLO_LECTURA):", "and False:", [EVT]),
+    ("Y04", "un bloqueo esperado ausente no se informa como hueco", EV, "    if faltan:", "    if False:", [EVT]),
     ("X15", "el tope de gasto alcanzado se rotula como un error cualquiera", PL, 'code = "presupuesto" if getattr(prov, "last_code", None) == "presupuesto" else "error"', 'code = "error"', [AB]),
 ]
 M = [(i, w, f, o, n if n is not None else "", t) for i, w, f, o, n, t in M]

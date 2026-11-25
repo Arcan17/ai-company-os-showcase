@@ -21,7 +21,7 @@ INCLUDE = (
     "frontend/package.json", "frontend/package-lock.json", "frontend/tsconfig.json", "frontend/vite.config.ts", "frontend/index.html",
     "frontend/postcss.config.js", "frontend/tailwind.config.js", "frontend/playwright",    # todas las configuraciones de Playwright (las pruebas de seguridad del repositorio leen la de auditoría)
     "qa/", ".gitignore", "Containerfile", "compose.yaml", "start.sh", ".dockerignore", "site/", "deploy/hp/", "run_demo.sh", "run_demo_comercial.sh", "run_v05_lab.sh",    # los lanzadores los exigen las pruebas de seguridad del propio repositorio
-    "docs/ARCHITECTURE.md", "docs/ROADMAP_V1_PRODUCTO.md", "docs/v05/", "docs/v06/", "docs/v07/", "docs/v08/", "docs/v09/", "docs/v10/", "docs/simple/", "docs/screenshots/",
+    "docs/ARCHITECTURE.md", "docs/ROADMAP_V1_PRODUCTO.md", "docs/v05/", "docs/v06/", "docs/v07/", "docs/v08/", "docs/v09/", "docs/v10/", "docs/qa/planner-eval-", "docs/simple/", "docs/screenshots/",
     "docs/demo/REAL_VS_SIMULADO.md", "docs/demo/RUNBOOK_DEMO.md", "docs/demo/screenshots/",
 )
 EXCLUDE = ("docs/demo/DEMO_COMERCIAL_V04.md", "docs/v05/v05-results.json", "docs/v09/DESPLIEGUE_HP.md")     # documento de planificación con el flujo interno; resultados regenerables; el diseño del despliegue en el servidor del autor es privado

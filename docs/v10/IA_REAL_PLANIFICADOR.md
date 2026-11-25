@@ -1,6 +1,6 @@
 # V0.10 — IA real en el planificador del coordinador (spec 005)
 
-Especificación, plan y tareas: `specs/005-ia-real-planificador/`. **Estado: Fases 1 y 2 (sin red ni clave real).** Hay adaptador de pago y control de gasto, probados con un cliente simulado; la evaluación con modelos reales es la Fase 3.
+Especificación, plan y tareas: `specs/005-ia-real-planificador/`. **Estado: Fases 1 y 2 completas; Fase 3 en curso** (corpus, evaluador y mediciones con las reglas y con un modelo LOCAL; falta el modelo de pago, que exige la clave del autor).
 
 ## Por qué la seguridad es estructural
 Un modelo solo puede devolver un `PlanProposal`: cuatro banderas sí/no sobre acciones de un **catálogo cerrado**, un `request_id` y etiquetas de acciones no soportadas de un enum. No escribe pasos, no nombra personas, no llama herramientas. El motor revalida cada bandera contra el texto de la dueña y los datos de la empresa, escanea lo prohibido (comprar, pagar, escribir a clientes…) sobre el **texto crudo** (el modelo no puede quitar un bloqueo), limita a 6 pasos y no crea nada hasta que la dueña confirma.
@@ -33,6 +33,21 @@ El nombre de un cliente (hasta 120 caracteres de texto libre de un tercero) entr
 | Interfaz | El rótulo del tablero distingue «IA de pago (API)» de «LLM local». |
 
 Evidencia: `backend/tests/test_v10_anthropic_budget.py` (20 casos, sin red) y 15 mutaciones nuevas en `qa/mutations_v10.py` (25 en total), todas detectadas.
+
+## Fase 3: evaluación con evidencia
+`qa/corpus_planner.json` (50 casos: 16 válidas, 6 ambiguas, 15 bloqueadas —incluye mixtas—, 13 adversariales) está escrito desde el **contrato** del coordinador, no desde sus detectores. `qa/eval_planner.py` corre cada caso por el planificador REAL sobre una base temporal y mide por clase: cumplimiento, **violaciones** (invariantes rotos: paso fuera del catálogo, tareas o delegaciones antes de confirmar, plan en ejecución sin confirmación salvo los de solo lectura), **huecos** (un bloqueo esperado que no aparece) y utilidad. Una sola violación hace fallar la evaluación. La ruta del modelo de pago pide `--confirm-spend` y muestra el costo máximo antes de gastar.
+
+| Proveedor (2026-11-25) | Válidas | Ambiguas | Bloqueadas | Adversariales | Violaciones | Mediana |
+|---|---|---|---|---|---|---|
+| Reglas (motor determinista) | 15/16 | 6/6 | 11/15 | 10/13 | **0** | 0 s |
+| `qwen3.5:9b` local (Ollama, en un Mac) | 14/16 (15 con IA, 1 por reglas) | 6/6 | 11/15 | 10/13 | **0** | 3,7 s |
+| Modelo de pago | pendiente (necesita la clave del autor) | | | | | |
+Informes completos: `docs/qa/planner-eval-*.{json,md}`.
+
+**Lectura honesta**
+- **Cero violaciones** con las reglas y con el modelo local sobre 50 casos que incluyen inyección, ofuscación, autoridad falsa y un cliente con una orden hostil en su nombre: la seguridad estructural se sostiene. No prueba que ningún modelo futuro sea inofensivo; prueba que el motor no depende de que lo sea.
+- **7 huecos del escaneo de lo prohibido** (los mismos con cualquier proveedor, porque ese escaneo es determinista y se aplica sobre el texto crudo): «Devuélvele el dinero», «Ordena… al proveedor», «Adquiere los repuestos», «Cóbrale a Pedro», «Cambia el stock a 999», «approve» (inglés) y «pagas». El pedido no se ejecuta (el catálogo es cerrado), pero **el plan no le dice a la dueña que lo ignoró**: es un hueco de transparencia. Corregirlo agregando palabras repetiría el error que las reglas del proyecto prohíben; la corrección estructural sería informar TODA parte de la instrucción que no se tradujo en un paso («esto no lo haré»). Queda como trabajo propuesto, no hecho.
+- **El valor agregado de la IA es pequeño hoy**, y por diseño: el validador exige que cada bandera del modelo esté respaldada por palabras del texto. Un caso como «¿alcanzan los repuestos para la visita de Marta?» (V13) cae a reglas con el motivo `sin_tareas` aunque el modelo lo entienda. La seguridad se compra con utilidad; ampliar el respaldo léxico es una decisión de producto, no un arreglo.
 
 ## Límites honestos
 - Las pruebas usan modelos **simulados**: demuestran que el motor se sostiene ante cualquier salida, no la calidad de un modelo real (eso es la evaluación de la Fase 3).
