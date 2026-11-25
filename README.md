@@ -3,7 +3,7 @@
 **Un equipo de agentes de IA que trabaja a la vista: permisos reales, aprobación humana en cada decisión que importa y trazabilidad completa.**
 Prototipo local multiempresa para negocios de servicios técnicos. **Datos 100 % ficticios.**
 
-> **In English (30 s):** a multi-tenant platform where each company has a team of AI *roles* (reception, coordinator, per-employee assistants) that collaborate through a closed tool registry with real permissions, human approvals, idempotent state machines and an audit trail. It is a **local prototype with fictitious data**: no real identity provider, MFA, e-mail/WhatsApp or deployment. The interesting part is the engineering evidence: 798 automated tests, 146 mutation checks, cross-tenant isolation matrices, a static tenancy audit and real-browser E2E.
+> **In English (30 s):** a multi-tenant platform where each company has a team of AI *roles* (reception, coordinator, per-employee assistants) that collaborate through a closed tool registry with real permissions, human approvals, idempotent state machines and an audit trail. It is a **local prototype with fictitious data**: no real identity provider, MFA, e-mail/WhatsApp or deployment. The interesting part is the engineering evidence: 800 automated tests, 146 mutation checks, cross-tenant isolation matrices, a static tenancy audit and real-browser E2E.
 
 ## Lo que NO es (léelo primero)
 - **No es un SaaS en producción.** Corre en tu máquina (`127.0.0.1`); no hay despliegue, dominio, pagos ni usuarios reales.
@@ -60,8 +60,8 @@ Decisiones y *trade-offs*: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). Hoja 
 ## Cómo se probó (con el comando para reproducirlo)
 | Qué | Resultado | Cómo reproducirlo |
 |---|---|---|
-| Pruebas automáticas de API, motor, seguridad, persistencia y recuperación | **798** | `cd backend && .venv/bin/python -m pytest -q` |
-| **Matriz de aislamiento entre empresas** generada del OpenAPI vivo y del registro de herramientas (una ruta o herramienta con id sin caso hace fallar la prueba) | incluida en las 798 | `pytest backend/tests/test_v07_cross_tenant_matrix.py` |
+| Pruebas automáticas de API, motor, seguridad, persistencia y recuperación | **800** | `cd backend && .venv/bin/python -m pytest -q` |
+| **Matriz de aislamiento entre empresas** generada del OpenAPI vivo y del registro de herramientas (una ruta o herramienta con id sin caso hace fallar la prueba) | incluida en las 800 | `pytest backend/tests/test_v07_cross_tenant_matrix.py` |
 | **Pruebas de mutación**: se rompe UNA propiedad de seguridad cada vez en una copia y las pruebas deben notarlo | **146** (29 + 45 + 39 + 21 + 12) | `python qa/mutations_v07_p1.py` · `…_p2.py` · `…_p25.py` · `qa/mutations_v08.py` |
 | Auditoría estática: toda consulta sobre una tabla de empresa filtra por `company_id` o está justificada una a una; toda ruta anónima está documentada | 0 sin justificar | `python qa/audit_identity_tenancy.py --check` |
 | Navegador real (Chromium): regresión A–E, demo guiada, modo piloto con cookie `__Host-` y reautenticación | 18 + 4 + 2 + 2 | `cd frontend && npx playwright test` (y `-c playwright.demo.config.ts`, `-c playwright.pilot.config.ts`) |
@@ -90,7 +90,7 @@ Una sola máquina y SQLite; sin recuperación de contraseña ni TLS propios; pro
 **Empieza por el [caso de estudio](docs/CASO_DE_ESTUDIO.md)** (cuatro historias de ingeniería con su evidencia) · [`docs/SEGURIDAD.md`](docs/SEGURIDAD.md) qué se probó y qué no · [`docs/ARQUITECTURA_V07.md`](docs/ARQUITECTURA_V07.md) diagramas · [`docs/oferta/PILOTO_A_MEDIDA.md`](docs/oferta/PILOTO_A_MEDIDA.md) la oferta · [`docs/VIDEO_GUION.md`](docs/VIDEO_GUION.md) · [`materiales/`](materiales/) textos para CV, LinkedIn y servicio · [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) · [`docs/v06/`](docs/v06/) acceso y sesiones, copias y restauración, límites del canal público, recuperación de ejecuciones · [`docs/v07/`](docs/v07/) auditoría de identidad y tenancy, modo piloto, identidad e invitaciones, vínculo del dueño · [`docs/demo/`](docs/demo/) guion y runbook · [`qa/`](qa/) herramientas de auditoría y mutación.
 
 ## Cifras y su fuente
-Las cifras de este README salen de estos comandos, ejecutados sobre un clon limpio de este repositorio: `pytest --collect-only -q` (798) · `python qa/mutations_v07_p{1,2,25}.py --list | wc -l` (29, 45, 39) y `qa/mutations_v08.py qa/mutations_v09.py --list` (21) · listas de pruebas de `frontend/e2e*` (18 + 4 + 2 + 2).
+Las cifras de este README salen de estos comandos, ejecutados sobre un clon limpio de este repositorio: `pytest --collect-only -q` (800) · `python qa/mutations_v07_p{1,2,25}.py --list | wc -l` (29, 45, 39) y `qa/mutations_v08.py qa/mutations_v09.py --list` (21) · listas de pruebas de `frontend/e2e*` (18 + 4 + 2 + 2).
 
 ## Licencia y contacto
 **Código visible, todos los derechos reservados** (ver [`LICENSE`](LICENSE)): puedes leerlo, clonarlo y ejecutarlo localmente para **evaluar** mi trabajo; no puedes copiarlo, redistribuirlo ni usarlo en un producto o servicio sin autorización escrita. Los datos son ficticios y el software se entrega «tal cual».

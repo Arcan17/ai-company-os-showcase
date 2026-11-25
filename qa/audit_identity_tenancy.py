@@ -73,7 +73,6 @@ ALLOWED_GLOBAL = {
     # ── arranque del modo piloto (V0.7 P1) ──
     ("pilot.py", "SELECT COUNT(*) FROM users WHERE is_demo=1"): "validate_startup ANTES de servir ninguna petición: cuenta las cuentas de demostración de TODA la base, con la base abierta en SOLO LECTURA; no hay empresa que filtrar, la pregunta es si la base entera es apta para el piloto",
     # ── estado de ejecución con ids que genera el servidor ──
-    ("events.py", "SELECT COALESCE(MAX(seq),0)+1 AS n FROM events WHERE run_id=:r"): "secuencia por run (ids aleatorios, solo llamadas internas con empresa)",
     ("ratelimit.py", "UPDATE rate_limits SET tat=MAX(tat-:T,:now) WHERE bucket=:b"): "estado de ejecución: el cubo es HMAC(clase|empresa|sujeto), la empresa va DENTRO del hash (#13)",
     ("ratelimit.py", "DELETE FROM rate_limits WHERE tat<=:n"): "purga global de contadores vencidos (#13)",
     ("ratelimit.py", "SELECT bucket,tat FROM rate_limits WHERE bucket IN ({})"): "lectura por nombre de cubo (HMAC con la empresa dentro) (#13)",

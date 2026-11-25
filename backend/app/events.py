@@ -6,6 +6,7 @@ approval, outcome). They are committed immediately, so SSE consumers and later r
 from __future__ import annotations
 
 from sqlalchemy.engine import Engine
+from sqlalchemy.exc import IntegrityError
 
 from .db import all_, jdump, jload, now, one, q
 
@@ -13,9 +14,19 @@ from .db import all_, jdump, jload, now, one, q
 def emit_in(conn, company_id: str, run_id: str, type_: str, *, agent: str | None = None, mode: str | None = None,
             title: str = "", data: dict | None = None) -> dict:
     """Insert an event INSIDE the caller's transaction (so it commits or rolls back together with the state change that caused it)."""
-    seq = one(conn, "SELECT COALESCE(MAX(seq),0)+1 AS n FROM events WHERE run_id=:r", r=run_id)["n"]
-    q(conn, "INSERT INTO events(company_id,run_id,seq,ts,type,agent,mode,title,data) VALUES(:c,:r,:s,:t,:ty,:a,:m,:ti,:d)",
-      c=company_id, r=run_id, s=seq, t=now(), ty=type_, a=agent, m=mode, ti=title, d=jdump(data or {}))
+    # El número de secuencia se asigna en UNA sola sentencia (MAX+1 dentro del propio INSERT, bajo el bloqueo de escritura): antes se leía el MAX y se insertaba después, y dos escritores de la
+    # misma ejecución (el hilo del motor y la petición de aprobación) podían elegir el mismo `seq` (UNIQUE) y dejar la ejecución «failed» o la aprobación en 500. Si aun así hay una colisión
+    # (otra base de datos con otro aislamiento), se reintenta con un número fresco.
+    params = dict(c=company_id, r=run_id, t=now(), ty=type_, a=agent, m=mode, ti=title, d=jdump(data or {}))
+    sql = ("INSERT INTO events(company_id,run_id,seq,ts,type,agent,mode,title,data) "
+           "SELECT :c,:r,COALESCE(MAX(seq),0)+1,:t,:ty,:a,:m,:ti,:d FROM events WHERE run_id=:r RETURNING seq")
+    for attempt in range(5):
+        try:
+            seq = q(conn, sql, **params).scalar_one()
+            break
+        except IntegrityError:
+            if attempt == 4:
+                raise
     return {"seq": seq, "type": type_}
 
 

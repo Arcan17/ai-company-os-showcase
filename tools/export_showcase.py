@@ -24,7 +24,7 @@ INCLUDE = (
     "docs/ARCHITECTURE.md", "docs/ROADMAP_V1_PRODUCTO.md", "docs/v05/", "docs/v06/", "docs/v07/", "docs/v08/", "docs/v09/", "docs/simple/", "docs/screenshots/",
     "docs/demo/REAL_VS_SIMULADO.md", "docs/demo/RUNBOOK_DEMO.md", "docs/demo/screenshots/",
 )
-EXCLUDE = ("docs/demo/DEMO_COMERCIAL_V04.md", "docs/v05/v05-results.json")     # documento de planificación con el flujo interno; resultados regenerables
+EXCLUDE = ("docs/demo/DEMO_COMERCIAL_V04.md", "docs/v05/v05-results.json", "docs/v09/DESPLIEGUE_HP.md")     # documento de planificación con el flujo interno; resultados regenerables; el diseño del despliegue en el servidor del autor es privado
 TEXT_EXT = {".md", ".py", ".ts", ".tsx", ".js", ".json", ".yml", ".yaml", ".toml", ".txt", ".sh", ".html", ".css"}
 
 # Reescrituras en la COPIA (el valor son las historias de ingeniería; no el nombre de la herramienta que hizo cada revisión).
