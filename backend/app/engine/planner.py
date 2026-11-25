@@ -22,7 +22,7 @@ from ..config import settings
 from ..db import all_, jdump, jload, now, one, q, uid
 from ..events import audit, emit
 from ..lease import LeaseLost
-from ..providers.base import PlanProposal
+from ..providers.base import PlanProposal, minimal_requests
 from ..tools import Denied, ToolError, invoke
 
 log = logging.getLogger("aicos.planner")
@@ -43,6 +43,17 @@ ACTIONS = {  # the CLOSED catalog: action → (agent, access, permission)
 ACTION_LABEL = {"review_pending": "Revisar solicitudes abiertas", "review_request": "Revisar la solicitud y su stock real",
                 "ask_admin_verify_materials": "Pedir a administración que verifique materiales", "ask_technician_confirm": "Pedir confirmación al técnico",
                 "report_to_owner": "Verificar el registro y avisarte"}
+
+
+# Por qué un plan salió «por reglas» aunque había un modelo configurado (se muestra en la interfaz y queda en el evento del plan).
+FALLBACK_LABEL = {"error": "la IA no respondió o falló", "lentitud": "la IA tardó demasiado", "invalida": "la IA devolvió una propuesta inválida",
+                  "sin_tareas": "la propuesta de la IA no tenía tareas soportadas"}
+
+
+def _well_formed(p) -> bool:
+    return (isinstance(p, PlanProposal) and all(isinstance(getattr(p, k), bool) for k in ("review_pending", "admin_verify_materials", "technician_confirm", "notify_owner"))
+            and (p.request_id is None or isinstance(p.request_id, str)) and isinstance(p.unsupported, list) and all(isinstance(u, str) for u in p.unsupported)
+            and isinstance(p.source, str))
 
 
 def norm(s: str) -> str:
@@ -232,29 +243,57 @@ class PlanEngine:
         everyone = ctx["staff"] + ctx.get("unassigned", [])   # names the owner may use: eligible employees AND those without an active assistant (to explain why not)
         prov = self.o.provider
         prop, notes, source = None, [], "deterministic"
+        fallback = None
         if prov.mode == "llm":
-            raw = prov.propose_plan(text, ctx["open_requests"])
-            if raw is None:
-                notes.append(f"el modelo no devolvió una propuesta válida ({getattr(prov, 'last_error', None)}): se usan las reglas deterministas")
-                self._ev(cid, pid, "plan.llm_rejected", "La propuesta del LLM no fue utilizable → reglas deterministas", {"reason": notes[-1]}, mode="llm")
-            else:
+            raw, fallback, detail = self._ask_provider(prov, text, ctx["open_requests"])
+            if raw is not None:
                 self._ev(cid, pid, "plan.proposed", f"Propuesta del LLM ({raw.source}) — aún NO validada", {"proposal": raw.__dict__}, mode="llm")
-                prop, rej = validate_llm_proposal(raw, text, ctx["open_requests"], ctx["customers"], everyone)
+                try:
+                    prop, rej = validate_llm_proposal(raw, text, ctx["open_requests"], ctx["customers"], everyone)
+                except Exception as e:                                    # una propuesta que rompe al validador es una propuesta inválida, no un error del servidor
+                    prop, rej, fallback, detail = None, [], "invalida", f"la propuesta no se pudo validar ({type(e).__name__})"
                 if rej:
                     self._ev(cid, pid, "plan.llm_rejected", f"Validación del motor descartó {len(rej)} elemento(s) de la propuesta del LLM", {"rejected": rej}, mode="deterministic")
-                if not (prop.review_pending or prop.admin_verify_materials or prop.technician_confirm):
-                    notes.append("tras validar, la propuesta del LLM no contenía tareas soportadas: se usan las reglas deterministas")
-                    prop = None
-                else:
+                if prop is not None and not (prop.review_pending or prop.admin_verify_materials or prop.technician_confirm):
+                    fallback, detail, prop = "sin_tareas", "tras validar, la propuesta del LLM no contenía tareas soportadas", None
+                elif prop is not None:
                     source = raw.source  # its "unsupported" labels are advisory only: the deterministic scan in _resolve is authoritative
+            if fallback:
+                notes.append(f"{FALLBACK_LABEL[fallback]} ({detail}): se usan las reglas deterministas")
+                self._ev(cid, pid, "plan.llm_rejected", "La propuesta del LLM no fue utilizable → reglas deterministas", {"reason": notes[-1], "code": fallback}, mode="llm")
         if prop is None:
             prop = deterministic_proposal(text, everyone)
         draft = self._resolve(prop, text, ctx, overrides)
         draft["notes"] = notes + draft.get("notes", [])
+        draft["fallback"] = fallback
         self._persist(cid, pid, draft, source, overrides)
         self._ev(cid, pid, "agent.completed", "Coordinador: plan " + {"awaiting_user_confirmation": "listo para tu confirmación", "needs_clarification": "necesita una aclaración", "blocked": "BLOQUEADO (no se ejecuta nada)"}[draft["status"]], {"status": draft["status"]})
         if draft["status"] == "awaiting_user_confirmation" and draft["intent"] == "review_pending":
             self._auto_read_only(cid, pid)
+
+    def _ask_provider(self, prov, text: str, open_requests: list[dict]):
+        """Pide la propuesta a un modelo con un PLAZO DURO y sin dejar escapar ninguna excepción: devuelve (propuesta|None, código de respaldo|None, detalle).
+        Un modelo caído, lento o que devuelve basura jamás rompe la creación del plan: se usan las reglas y se dice por qué."""
+        out: dict = {}
+
+        def run():
+            try:
+                out["v"] = prov.propose_plan(text, minimal_requests(open_requests))
+            except Exception as e:                                        # noqa: BLE001
+                out["e"] = f"{type(e).__name__}: {e}"[:200]
+        th = threading.Thread(target=run, daemon=True, name="llm-plan")
+        th.start()
+        th.join(settings.llm_plan_timeout)
+        if th.is_alive():
+            return None, "lentitud", f"sin respuesta en {settings.llm_plan_timeout:g} s"
+        if "e" in out:
+            return None, "error", out["e"]
+        raw = out.get("v")
+        if raw is None:
+            return None, "error", str(getattr(prov, "last_error", None) or "sin respuesta")[:200]
+        if not _well_formed(raw):
+            return None, "invalida", "la respuesta no tiene la forma esperada"
+        return raw, None, ""
 
     # ---- entity resolution + step construction (pure, from real data) ----
     def _resolve(self, prop: PlanProposal, text: str, ctx: dict, ov: dict) -> dict:
@@ -408,7 +447,7 @@ class PlanEngine:
                   i=uid("stp_"), c=cid, p=pid, sq=s["seq"], a=s["action"], ag=s["agent"], u=s["assignee_user_id"], ar=jdump(s["args"]), d=s["depends_on"], ac=s["access"], pe=s["permission"],
                   o=source if source.startswith("llm") else "deterministic", ti=s["title"], t=t)
             q(c, "UPDATE plans SET status=:s,source=:so,intent=:in,request_id=:r,summary=:su,proposal=:pr,excluded=:ex,clarification=:cl,status_reason=:re,updated_at=:t WHERE id=:i AND company_id=:c",
-              s=d["status"], so=source, **{"in": d["intent"]}, r=d["request_id"], su=d.get("summary"), pr=jdump({"overrides": overrides, "notes": d["notes"]}), ex=jdump(d["excluded"]),
+              s=d["status"], so=source, **{"in": d["intent"]}, r=d["request_id"], su=d.get("summary"), pr=jdump({"overrides": overrides, "notes": d["notes"], "fallback": d.get("fallback")}), ex=jdump(d["excluded"]),
               cl=jdump(d["clarification"]) if d["clarification"] else None, re=d["reason"], t=t, i=pid, c=cid)
         ttl = {"awaiting_user_confirmation": "Plan validado (aún no ejecuta nada): espera tu confirmación", "needs_clarification": "Plan en pausa: " + (d["reason"] or ""), "blocked": "Plan bloqueado: " + (d["reason"] or "")}[d["status"]]
         self._ev(cid, pid, {"awaiting_user_confirmation": "plan.validated", "needs_clarification": "plan.needs_clarification", "blocked": "plan.blocked"}[d["status"]], ttl,
@@ -595,7 +634,7 @@ class PlanEngine:
         meta = jload(p["proposal"], {})
         return {"id": p["id"], "text": p["text"], "status": p["status"], "source": p["source"], "intent": p["intent"], "request_id": p["request_id"], "summary": p["summary"],
                 "status_reason": p["status_reason"], "result_summary": p["result_summary"], "excluded": jload(p["excluded"], []), "clarification": jload(p["clarification"], None),
-                "notes": meta.get("notes", []), "rounds": p["rounds"], "max_rounds": MAX_ROUNDS, "created_by": by["name"] if by else None, "created_by_id": p["created_by"],
+                "notes": meta.get("notes", []), "fallback": meta.get("fallback"), "fallback_label": FALLBACK_LABEL.get(meta.get("fallback") or ""), "rounds": p["rounds"], "max_rounds": MAX_ROUNDS, "created_by": by["name"] if by else None, "created_by_id": p["created_by"],
                 "confirmed_at": p["confirmed_at"], "created_at": p["created_at"], "steps": steps}
 
 

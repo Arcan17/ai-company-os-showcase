@@ -147,3 +147,12 @@ def test_el_reinicio_descarta_los_espacios_anteriores(tmp_path):
     with TestClient(r2) as b:
         r = b.get("/api/auth/me", headers={"Cookie": f"{COOKIE}={old}"})     # cookie válida (firma correcta) de un proceso anterior
         assert _set_cookie(r) and _set_cookie(r) != old                      # su espacio ya no existe: recibe uno nuevo
+
+
+def test_la_demo_publica_se_niega_a_arrancar_con_un_modelo_de_ia(tmp_path, monkeypatch):
+    for prov in ("ollama", "anthropic", "cualquier-otro"):
+        monkeypatch.setattr(settings, "llm_provider", prov)
+        with pytest.raises(PublicDemoConfigError):
+            VisitorRouter(tmp_path / prov)
+    monkeypatch.setattr(settings, "llm_provider", "deterministic")
+    VisitorRouter(tmp_path / "ok")

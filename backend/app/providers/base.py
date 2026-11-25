@@ -40,6 +40,21 @@ class Provider(ABC):
         return None
 
 
+_LABEL_KEEP = re.compile(r"[^\w .,'\-áéíóúüñÁÉÍÓÚÜÑ]", re.UNICODE)
+
+
+def safe_label(value, limit: int = 40) -> str:
+    """Un nombre que viene de un CLIENTE (texto libre de un tercero) antes de mostrarlo a un modelo: solo letras, números y puntuación simple, una línea y como máximo `limit` caracteres.
+    No es la defensa (la defensa es el resultado de vocabulario cerrado + el validador); es para no darle al modelo un canal cómodo de 120 caracteres con símbolos, saltos de línea o delimitadores."""
+    t = _LABEL_KEEP.sub(" ", str(value or ""))
+    return " ".join(t.split())[:limit]
+
+
+def minimal_requests(open_requests: list[dict]) -> list[dict]:
+    """Lo ÚNICO que un modelo ve de las solicitudes abiertas: id, nombre del cliente (saneado) y categoría. Jamás la descripción ni los mensajes del cliente."""
+    return [{"id": str(r.get("id", ""))[:40], "customer": safe_label(r.get("customer")), "category": str(r.get("category") or "")[:40]} for r in open_requests]
+
+
 UNSUPPORTED = ["comprar", "pagar", "enviar_mensaje_externo", "agendar_o_reservar", "aprobar", "modificar_stock", "eliminar_datos", "otro"]
 
 

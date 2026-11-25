@@ -55,7 +55,7 @@ export default function Coordinator({ me, planId }: { me: Me; planId?: string })
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div><div className="text-xs text-slate-400">{p.id} · {p.created_by}</div><div className="font-semibold mt-0.5" data-testid="plan-text">«{p.text}»</div></div>
                 <div className="flex items-center gap-1.5"><span data-testid="plan-status"><StatusChip s={p.status} /></span>
-                  <Chip tone={p.source?.startsWith("llm") ? "violet" : "sky"} title="Quién propuso el plan">{p.source?.startsWith("llm") ? `Propuesto por LLM local · validado por el motor` : "Reglas deterministas (sin LLM)"}</Chip></div>
+                  <Chip tone={p.source?.startsWith("llm") ? "violet" : p.fallback ? "amber" : "sky"} title={p.fallback ? "Había un modelo de IA configurado, pero no se pudo usar" : "Quién propuso el plan"} data-testid="plan-source">{p.source?.startsWith("llm") ? `Propuesto por IA (${p.source.slice(4)}) · validado por el motor` : p.fallback ? `Por reglas: ${p.fallback_label}` : "Reglas deterministas (sin LLM)"}</Chip></div>
               </div>
               {p.status_reason && <div className={`text-sm rounded-lg border px-3 py-2 ${p.status === "blocked" || p.status === "failed" ? "bg-rose-50 border-rose-200 text-rose-900" : "bg-amber-50 border-amber-200 text-amber-900"}`} data-testid="plan-reason">{p.status_reason}</div>}
               {["waiting_human", "running"].includes(p.status) && (() => {

@@ -15,6 +15,7 @@ class Settings:
     step_delay: float = float(os.environ.get("AICOS_STEP_DELAY", "0.55"))  # pacing so the graph is watchable
     sync_runs: bool = os.environ.get("AICOS_SYNC", "0") == "1"  # tests: run engine inline
     llm_provider: str = os.environ.get("AICOS_LLM_PROVIDER", "deterministic")  # deterministic | ollama
+    llm_plan_timeout: float = float(os.environ.get("AICOS_LLM_PLAN_TIMEOUT", "60"))   # plazo duro (s) para que un modelo proponga un plan: pasado el plazo, se usan las reglas (rotulado)
     ollama_url: str = os.environ.get("AICOS_OLLAMA_URL", "http://127.0.0.1:11434")
     ollama_model: str = os.environ.get("AICOS_OLLAMA_MODEL", "qwen3.5:4b-q4_K_M")
     static_dir: Path = Path(os.environ.get("AICOS_STATIC_DIR", str(ROOT.parent / "frontend" / "dist")))

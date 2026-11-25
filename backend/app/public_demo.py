@@ -62,6 +62,8 @@ class VisitorRouter:
             raise PublicDemoConfigError("La demo pública no puede ejecutarse con AICOS_ENV=pilot.")
         if settings.allow_company_creation:
             raise PublicDemoConfigError("La demo pública exige AICOS_ALLOW_COMPANY_CREATION=0.")
+        if settings.llm_provider != "deterministic":
+            raise PublicDemoConfigError("La demo pública solo usa el motor determinista (AICOS_LLM_PROVIDER=deterministic): sin costo ni riesgo de abuso de un modelo.")
         self.dir = Path(data_dir)
         self.secret = secret or os.environ.get("AICOS_VISITOR_SECRET", "").encode() or secrets.token_bytes(32)
         self.max, self.idle, self.new_per_source, self.new_window, self.sweep_every = max_visitors, idle_seconds, new_per_source, new_window, sweep_seconds
