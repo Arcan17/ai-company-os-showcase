@@ -3,6 +3,9 @@
 **Un equipo de agentes de IA que trabaja a la vista: permisos reales, aprobación humana en cada decisión que importa y trazabilidad completa.**
 Prototipo local multiempresa para negocios de servicios técnicos. **Datos 100 % ficticios.**
 
+![Demostración: decisión pendiente, aprobación, trazabilidad y una orden prohibida que el motor bloquea](docs/media/demo.gif)
+*Grabado de la demo real, con IA local y datos ficticios: se decide, queda registrado y lo prohibido se bloquea.*
+
 > **In English (30 s):** a multi-tenant platform where each company has a team of AI *roles* (reception, coordinator, per-employee assistants) that collaborate through a closed tool registry with real permissions, human approvals, idempotent state machines and an audit trail. It is a **local prototype with fictitious data**: no real identity provider, MFA, e-mail/WhatsApp or deployment. The interesting part is the engineering evidence: 926 automated tests, 198 mutation checks, cross-tenant isolation matrices, a static tenancy audit and real-browser E2E.
 
 ## Lo que NO es (léelo primero)

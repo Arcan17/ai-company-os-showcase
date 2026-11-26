@@ -6,6 +6,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 // Todo es real: el mismo servidor y la misma interfaz; solo se agregan un cursor y rótulos en pantalla, y pausas para que se pueda leer.
 const FAST = process.env.RECORD_VIDEO !== "1";
 const IA = process.env.RECORD_IA === "1";
+const NOCAP = process.env.REC_NOCAPTION === "1"; // sin rótulos en pantalla: para montar el video aparte (rótulos propios)
 const OUT = process.env.REC_OUT ?? "../grabaciones/raw";
 const SHOTS = process.env.REC_SHOTS ?? "../grabaciones/capturas";
 
@@ -39,7 +40,7 @@ test("recorrido de la demo: decidir, trazabilidad, lo prohibido y la IA", async 
     await cdp.send("Page.startScreencast", { format: "jpeg", quality: 88, maxWidth: 1280, maxHeight: 800, everyNthFrame: 1 });
   }
   const pause = (ms: number) => (FAST ? Promise.resolve() : page.waitForTimeout(ms));
-  const caption = (t: string) => page.evaluate(x => { const e = document.getElementById("rec-caption"); if (!e) return; if (!x) { e.style.display = "none"; return; } e.textContent = x; e.style.display = "block"; }, t);
+  const caption = (t: string) => NOCAP ? Promise.resolve() : page.evaluate(x => { const e = document.getElementById("rec-caption"); if (!e) return; if (!x) { e.style.display = "none"; return; } e.textContent = x; e.style.display = "block"; }, t);
   const scene = async (name: string, text: string) => { marks.push({ escena: name, epoch: Date.now() / 1000 }); await caption(text); };
   const aim = async (loc: any) => { await loc.scrollIntoViewIfNeeded(); const b = await loc.boundingBox(); if (b) await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2, { steps: FAST ? 1 : 30 }); await pause(350); };
   const tap = async (loc: any) => { await aim(loc); await loc.click(); };
