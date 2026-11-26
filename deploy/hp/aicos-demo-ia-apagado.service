@@ -1,0 +1,11 @@
+# Acción del apagado programado: detiene la instancia privada con IA y retira SOLO su unidad Quadlet (para que no reaparezca al reiniciar). No toca ningún otro servicio.
+# El volumen (aicos-demo-ia-data) y la imagen se conservan; se borran a mano si se quiere (ver README.md).
+[Unit]
+Description=Apagado programado de la instancia privada con IA de AI Company OS
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/systemctl --user stop aicos-demo-ia.service
+ExecStart=/usr/bin/rm -f %h/.config/containers/systemd/aicos-demo-ia.container
+ExecStart=/usr/bin/systemctl --user daemon-reload
+ExecStart=/usr/bin/systemctl --user disable aicos-demo-ia-apagado.timer

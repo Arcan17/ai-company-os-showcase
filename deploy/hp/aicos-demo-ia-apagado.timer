@@ -1,0 +1,13 @@
+# Apagado PROGRAMADO de la instancia privada con IA (misma fecha que la demo pública: 30 días desde 2026-11-25).
+# Se instala en ~/.config/systemd/user/ junto con aicos-demo-ia-apagado.service. Para cambiar la fecha: edita OnCalendar y `systemctl --user daemon-reload`.
+[Unit]
+Description=Apagar la instancia privada con IA de AI Company OS (fecha programada)
+
+[Timer]
+OnCalendar=2026-12-25 12:00:00 UTC
+# Si el servidor estaba apagado a esa hora, se ejecuta al volver a arrancar.
+Persistent=true
+Unit=aicos-demo-ia-apagado.service
+
+[Install]
+WantedBy=timers.target
