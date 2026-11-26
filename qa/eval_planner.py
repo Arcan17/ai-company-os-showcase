@@ -127,6 +127,16 @@ def evaluar(caso: dict, pl: dict, tareas0: int, deleg0: int, tareas1: int, deleg
     return {"violaciones": violaciones, "huecos": huecos, "incumplidos": incumplidos}
 
 
+def modelo_no_medido(resultados: list[dict], se_pidio_un_modelo: bool) -> str | None:
+    """Si se pidió un modelo (ollama / anthropic) y NINGÚN caso lo usó, la corrida NO midió al modelo: todo cayó a las reglas (clave inválida, sin saldo, sin red, modelo inexistente…).
+    Presentarla como «evaluación del modelo» sería engañoso (salen los números de las reglas), así que se rechaza y se dice el motivo del primer fallo (ya viene sin secretos)."""
+    if not se_pidio_un_modelo or any(r["origen"] == "ia" for r in resultados):
+        return None
+    motivo = next((r["detalle_respaldo"] for r in resultados if r.get("detalle_respaldo")), "sin detalle")
+    return (f"NINGUNA llamada al modelo tuvo éxito en {len(resultados)} caso(s): NO se midió al modelo (todo cayó a las reglas, con gasto 0). Motivo del primer fallo: {motivo}. "
+            "No se escribe ningún informe. Revisa la clave, el saldo de la cuenta, el nombre del modelo o la red y repite.")
+
+
 def main() -> int:
     a = parse_args()
     corpus = json.loads(CORPUS.read_text())
@@ -165,7 +175,7 @@ def main() -> int:
             costo = (w.scalar("SELECT COALESCE(SUM(cost_usd),0) FROM llm_usage") - c0) if a.provider == "anthropic" else 0.0
             resultados.append({"id": caso["id"], "clase": caso["clase"], "estado": pl["status"], "origen": "ia" if str(pl["source"]).startswith("llm") else "reglas", "respaldo": pl.get("fallback"),
                                "acciones": [s["action"] for s in pl["steps"]], "excluidos": [x["code"] if isinstance(x, dict) else x for x in pl.get("excluded", [])], "ignorados": pl.get("ignored", []),
-                               "segundos": round(dt, 2), "costo_usd": round(costo, 6), **ev})
+                               "segundos": round(dt, 2), "costo_usd": round(costo, 6), "detalle_respaldo": next((n for n in pl.get("notes", []) if "reglas deterministas" in n), None), **ev})
             lat.append(dt)
             w.cancel(pl["id"])
         tokens = w.scalar("SELECT COALESCE(SUM(input_tokens),0) FROM llm_usage"), w.scalar("SELECT COALESCE(SUM(output_tokens),0) FROM llm_usage")
@@ -176,6 +186,10 @@ def main() -> int:
         k["casos"] += 1; k["ia" if r["origen"] == "ia" else "reglas"] += 1
         k["violaciones"] += len(r["violaciones"]); k["huecos"] += len(r["huecos"])
         k["cumplen"] += 0 if (r["violaciones"] or r["huecos"] or r["incumplidos"]) else 1
+    no_medido = modelo_no_medido(resultados, a.provider != "deterministic")
+    if no_medido:
+        print("✖ " + no_medido, file=sys.stderr)
+        return 3
     total_viol = sum(k["violaciones"] for k in por_clase.values())
     meta = {"fecha": datetime.now(timezone.utc).isoformat(timespec="seconds"), "proveedor": proveedor, "modelo_configurado": a.model or None, "python": platform.python_version(),
             "corpus_sha256": hashlib.sha256(CORPUS.read_bytes()).hexdigest()[:16], "casos": len(resultados), "tokens_entrada": tokens[0], "tokens_salida": tokens[1], "gasto_usd": round(gasto, 6)}

@@ -65,6 +65,8 @@ M = [
     ("Z02", "la vista del plan no expone las partes ignoradas", PL, '"ignored": meta.get("ignored", []), "fallback_label"', '"ignored": [], "fallback_label"', [TR]),
     ("Z03", "una parte de la instrucción sin paso ni etiqueta no se avisa", PL, "        if not covered and clause[:120] not in out:", "        if False:", [TR]),
     ("Z04", "una parte que SÍ tiene paso se avisa como ignorada (falso aviso)", PL, "        covered = ((prop.admin_verify_materials", "        covered = (False and (prop.admin_verify_materials", [TR]),
+    ("Y05", "una corrida donde el modelo nunca respondió se presenta como una medición del modelo", EV, '    if not se_pidio_un_modelo or any(r["origen"] == "ia" for r in resultados):', "    if True:", [EVT]),
+    ("Y06", "el script no rechaza la corrida sin llamadas exitosas (escribe un informe engañoso)", EV, "    if no_medido:\n        print", "    if False:\n        print", [EVT]),
 ]
 M = [(i, w, f, o, n if n is not None else "", t) for i, w, f, o, n, t in M]
 

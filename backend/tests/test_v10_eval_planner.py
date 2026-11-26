@@ -86,3 +86,31 @@ def test_el_modelo_de_pago_sin_clave_se_niega_y_sin_autorizacion_no_gasta_ni_imp
     p = _correr("--provider", "anthropic", "--only", "V01,V02", env={"AICOS_ANTHROPIC_API_KEY": FAKE})
     assert p.returncode == 0 and "No se llamó a la API" in p.stdout and "Costo MÁXIMO estimado" in p.stdout
     assert FAKE not in p.stdout + p.stderr
+
+
+# ───────── una corrida sin ninguna llamada exitosa al modelo NO es una medición del modelo ─────────
+def _res(origen, detalle=None):
+    return {"origen": origen, "detalle_respaldo": detalle}
+
+
+def test_sin_ninguna_llamada_exitosa_no_se_mide_al_modelo_y_se_dice_por_que():
+    msg = ev.modelo_no_medido([_res("reglas", "El modelo falló (AuthenticationError: invalid x-api-key): se usan las reglas deterministas")] * 3, True)
+    assert msg and "NO se midió al modelo" in msg and "invalid x-api-key" in msg and "No se escribe ningún informe" in msg
+
+
+def test_con_al_menos_una_llamada_exitosa_la_corrida_vale():
+    assert ev.modelo_no_medido([_res("reglas", "falló"), _res("ia")], True) is None
+
+
+def test_con_las_reglas_solas_no_aplica():
+    assert ev.modelo_no_medido([_res("reglas")] * 3, False) is None
+
+
+def test_el_script_rechaza_una_corrida_donde_el_modelo_nunca_respondio(tmp_path):
+    """Sin red: un servidor local inexistente hace fallar toda llamada al instante (como una clave inválida): código 3, mensaje claro y NINGÚN informe escrito."""
+    out = tmp_path / "informes"
+    p = subprocess.run([PY, str(ROOT / "qa" / "eval_planner.py"), "--provider", "ollama", "--ollama-url", "http://127.0.0.1:1", "--model", "x", "--only", "V01,V02", "--out", str(out)],
+                       capture_output=True, text=True, timeout=120, cwd=ROOT / "backend")
+    assert p.returncode == 3, (p.stdout[-400:], p.stderr[-400:])
+    assert "NINGUNA llamada al modelo tuvo éxito" in p.stderr
+    assert not out.exists() or not list(out.iterdir())
