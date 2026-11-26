@@ -43,3 +43,21 @@ rm ~/.config/containers/systemd/aicos-demo.container && systemctl --user daemon-
 podman volume rm aicos-demo-data        # borra los datos (ficticios) de la demo
 ```
 La imagen anterior se conserva con su etiqueta; para volver a una versión previa basta reetiquetarla como `v11` (o la etiqueta vigente) y reiniciar el servicio.
+
+
+## Demo PRIVADA con IA local (`aicos-demo-ia`) — instalada el 2026-11-26 con aprobación del autor
+Otra instancia, distinta de la pública: imagen `v12`, puerto `127.0.0.1:8732`, volumen `aicos-demo-ia-data`, base persistente y el planificador del coordinador usando el **Ollama del propio HP** (`qwen3:4b-instruct-hermes`, el modelo que ya estaba cargado: no se carga ninguno nuevo). **No es pública y no se expone**: se alcanza desde el HP o por túnel SSH.
+```bash
+# construir (en el HP, con el código de main llevado a ~/aicos-demo-src-v12 como en P1)
+podman build -f Containerfile -t localhost/aicos-demo:v12 .
+# instalar y arrancar (sin sudo)
+cp deploy/hp/aicos-demo-ia.container ~/.config/containers/systemd/
+/usr/lib/systemd/system-generators/podman-system-generator --user --dryrun     # solo valida
+systemctl --user daemon-reload && systemctl --user start aicos-demo-ia.service
+# usarla desde tu Mac
+ssh -N -L 18732:127.0.0.1:8732 hp-homelab &        # y abre http://127.0.0.1:18732
+```
+- **Red:** el Ollama del HP solo escucha en el loopback del anfitrión, así que el contenedor usa `Network=slirp4netns:allow_host_loopback=true` (el loopback del HP aparece como `10.0.2.2`). Es lo mínimo para llegar a él; **no** se usa la red del anfitrión ni se cambia cómo escucha Ollama. Contrapartida: desde ese contenedor es alcanzable cualquier servicio del loopback del HP; la app solo llama a la URL fija de la unidad, no maneja datos reales y el contenedor es de solo lectura y sin capacidades.
+- **Lentitud esperada (solo CPU):** un plan tarda ~16 s (medido: mediana 16 s, máx. 18,5 s); mientras tanto la pantalla dice «Pensando…». Con el modelo activo, la clasificación de solicitudes y los borradores del flujo «Probar como cliente» también pasan por el modelo, así que ese flujo tarda bastante más que con reglas. Si Hermes u Oficina V2 usan el modelo a la vez, irá más lento; pasado el plazo (90 s) se usan las reglas, rotulado.
+- **Reiniciar a la decisión de ejemplo inicial:** `systemctl --user stop aicos-demo-ia.service && podman volume rm aicos-demo-ia-data && systemctl --user start aicos-demo-ia.service`.
+- **Apagar y quitar:** `systemctl --user stop aicos-demo-ia.service && rm ~/.config/containers/systemd/aicos-demo-ia.container && systemctl --user daemon-reload` (la imagen y el volumen se conservan hasta que los borres). **No** está cubierta por el apagado programado de la demo pública (2026-12-25).

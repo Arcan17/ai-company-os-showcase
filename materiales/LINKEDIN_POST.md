@@ -9,7 +9,7 @@ Llevo meses construyendo algo que no cabe en una demo de 30 segundos, así que d
 **AI Company OS** es un prototipo de equipos de agentes de IA para negocios de servicios técnicos: el cliente escribe, el coordinador arma el plan, administración cotiza, **y las decisiones importantes —gastos, planes y mensajes a clientes— las aprueba una persona**. Cada paso queda auditado y cada tarea solo se cierra con evidencia.
 
 Lo que más me importó fue poder demostrarlo:
-• 915 pruebas automáticas y 196 mutaciones de seguridad (rompo una propiedad a propósito y las pruebas deben notarlo).
+• 922 pruebas automáticas y 196 mutaciones de seguridad (rompo una propiedad a propósito y las pruebas deben notarlo).
 • Una matriz que prueba el aislamiento entre empresas, generada desde el propio OpenAPI.
 • Un fallo único en CI que no taché de «flaky»: lo reproduje 8 de 8 veces sin navegador, era una carrera real del motor, y la fijé con 15 pruebas deterministas.
 

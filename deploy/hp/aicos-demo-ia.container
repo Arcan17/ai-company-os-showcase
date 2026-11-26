@@ -1,0 +1,45 @@
+# Unidad Quadlet (usuario, rootless) de la demo PRIVADA con IA LOCAL de AI Company OS en el HP. DATOS 100 % FICTICIOS. NO es la demo pública: otra imagen, otro puerto, otro volumen.
+# Usa el Ollama que ya corre en el HP (solo escucha en el loopback del anfitrión). Para alcanzarlo, el contenedor usa `slirp4netns:allow_host_loopback=true` (10.0.2.2 = loopback del HP):
+# es lo MÍNIMO que hace falta; no usa la red del anfitrión. Contrapartida a saber: desde ese contenedor es alcanzable cualquier servicio del loopback del HP (la app solo llama a la URL fija
+# de abajo; sin datos reales, sin salida a internet requerida, de solo lectura y sin capacidades). Solo se alcanza desde el propio HP o por túnel SSH:  ssh -N -L 18732:127.0.0.1:8732 hp-homelab
+# Se instala copiándola a ~/.config/containers/systemd/ (ver README.md de esta carpeta), solo con la aprobación de quien opera el servidor.
+
+[Unit]
+Description=AI Company OS - demo PRIVADA con IA local (datos ficticios, solo loopback)
+Wants=network-online.target
+After=network-online.target
+
+[Container]
+# Etiqueta explícita (nunca :latest); se construye en el HP: podman build -f Containerfile -t localhost/aicos-demo:v12 .
+Image=localhost/aicos-demo:v12
+ContainerName=aicos-demo-ia
+# SOLO loopback del HP y OTRO puerto que la demo pública (8731).
+PublishPort=127.0.0.1:8732:8731
+Volume=aicos-demo-ia-data:/data
+Network=slirp4netns:allow_host_loopback=true
+# Instancia normal (NO AICOS_PUBLIC_DEMO): una sola empresa ficticia con su base persistente; la decisión de ejemplo se crea una vez. Sin creación de empresas.
+Environment=AICOS_DEMO_EXAMPLE=1
+Environment=AICOS_LLM_PROVIDER=ollama
+Environment=AICOS_OLLAMA_URL=http://10.0.2.2:11434
+Environment=AICOS_OLLAMA_MODEL=qwen3:4b-instruct-hermes
+# En el HP (solo CPU) un plan tarda ~16 s: el plazo de 90 s deja margen si Hermes/Oficina V2 están ocupados; pasado el plazo se usan las reglas, rotulado.
+Environment=AICOS_LLM_PLAN_TIMEOUT=90
+Environment=AICOS_STEP_DELAY=0.55
+Environment=AICOS_ALLOW_COMPANY_CREATION=0
+ReadOnly=true
+Tmpfs=/tmp
+DropCapability=ALL
+NoNewPrivileges=true
+PodmanArgs=--pids-limit=256 --memory=512m --memory-swap=512m --cpus=1.5
+HealthCmd=python -c "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8731/api/health', timeout=2).status == 200 else 1)"
+HealthInterval=30s
+HealthRetries=3
+HealthStartPeriod=20s
+
+[Service]
+Restart=on-failure
+RestartSec=10
+TimeoutStartSec=180
+
+[Install]
+WantedBy=default.target
